@@ -116,3 +116,51 @@ for d in named_entities:
             merged[key] = ([value[0]], [value[1]])
 
 print(merged)
+
+'''
+Calculate the relevance score for each of the merged entity in the 
+input and return the three entities with the highest relevance score.
+
+Assume entities is a dictionary of key: entity and value: list of sentence
+indices
+'''
+def relevanceScore(entities):
+    # not finalized, weight the impact of a mention in the headline
+    weight = 0.5 
+    scores = []
+    for entity in entities:
+        score = 0
+        if entity in headline:
+            score += weight
+	# entities[entity][0]: first location where the entity is mentioned (starts with 1)
+        score += len(entities[entity]) / (len(sentences) * (entities[entity][0] + 1))
+        scores.append((entity, score))
+    print(sorted(scores, key = lambda x: -x[1]))
+
+    # pick three top
+    first, second, third = -1, -1, -1
+    result = [None, None, None]
+    for entity,score in scores:
+        if score > first:
+            third = second
+            second = first
+            first = score
+            result[2] = result[1]
+            result[1] = result[0]
+            result[0] = entity
+        elif score > second:
+            third = second
+            second = score
+            result[2] = result[1]
+            result[1] = entity
+        elif score > third:
+            third = score
+            result[2] = entity
+    return result
+
+# test for function relevanceScore
+entities = {"Keith Lucas": [1,3,4,6,8,100], "Megan Zhao": [0], "Quinn": [103], "John Smith": [12,367],
+"Minnesota": [34,56], "North Dakota": [2,3]}
+headline = "Minnesota is freezing"
+print(relevanceScore(entities))
+
