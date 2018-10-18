@@ -4,7 +4,7 @@ from nltk import (
 
 # from nltk.tokenize import MWETokenizer
 # entity_categories = ['GPE', 'PERSON', 'ORGANIZATION']
-short_article = "Saudi Arabia was preparing an alternative explanation of the fate of a dissident journalist on Monday, saying he died at the Saudi Consulate in Istanbul two weeks ago in an interrogation gone wrong, according to a person familiar with the kingdom’s plans. In Washington, President Trump echoed the possibility that Jamal Khashoggi was the victim of rogue killers."
+short_article = "Saudi Arabia was preparing an alternative explanation of the fate of a dissident journalist on Monday, saying he died at the Saudi Consulate in Istanbul two weeks ago in an interrogation gone wrong, according to a person familiar with the kingdom’s plans."
 article = """
 When Keith Ellison started his bid to become Minnesota’s next attorney general, he had formidable advantages.
 
@@ -87,38 +87,91 @@ That may be the only thing that Mr. Ellison and Mr. Wardlow agree on. Asked how 
 
 """
 
-sentences = sent_tokenize(article)
-named_entities = []
 
-for i in range(len(sentences)):
-    tokens = word_tokenize(sentences[i])
+def extract_entitities_article(article):
+    '''
+    Returns a list of (unmerged) entities from the article.
+
+    Each entity is a tuple (entity name, sentence number)
+    '''
+    sentences = sent_tokenize(article)
+    named_entities = []
+
+    for i in range(len(sentences)):
+        sentence = sentences[i]
+        tokens = word_tokenize(sentence)
+        tagged_sentences = pos_tag(tokens)
+        chunked_entities = ne_chunk(tagged_sentences)
+
+        for tree in chunked_entities:
+            if hasattr(tree, 'label'):
+                entity = {}
+                entity_name = ' '.join(c[0] for c in tree.leaves())
+                sentence_number = i
+                # TODO @Quinn, @Megan extract location of entity within sentence (index??)
+                entity = (entity_name, sentence_number)
+                named_entities.append(entity)
+
+    return named_entities
+
+
+def extract_entitities_headline(headline):
+    '''
+    Returns a list of (unmerged) entities from the article.
+
+    Each entity is a tuple (entity name, "HEADLINE")
+    '''
+    named_entities = []
+    tokens = word_tokenize(headline)
     tagged_sentences = pos_tag(tokens)
-    ne_chunked_sents = ne_chunk(tagged_sentences)
+    chunked_entities = ne_chunk(tagged_sentences)
 
-    for tree in ne_chunked_sents:
+    for tree in chunked_entities:
         if hasattr(tree, 'label'):
             entity = {}
             entity_name = ' '.join(c[0] for c in tree.leaves())
-            entity_type = tree.label()
-            sentence_number = i
-            entity[entity_name] = (entity_type, sentence_number)
+            entity = (entity_name, "HEADLINE")
             named_entities.append(entity)
 
+    return named_entities
 
-merged = {}
 
-for d in named_entities:
-    for key, value in d.items():
-        if key in merged:
-            merged[key][0].append(value[0])
-            merged[key][1].append(value[1])
+def merge_entities(entities):
+    merged = {}
+
+    for entity in entities:
+        name, sentence_number = entity
+        if name in merged:  # TODO replace this line with actual merging
+            entity_data = merged[name]
+            entity_data['count'] += 1
+            if sentence_number == "HEADLINE":
+                entity_data['headline'] = True
+            else:
+                locations = entity_data['locations']
+                if sentence_number in locations:
+                    # TODO update with sentence locations
+                    pass
+                else:
+                    locations[sentence_number] = []
         else:
-            merged[key] = ([value[0]], [value[1]])
+            data = {
+                'count': 1,
+                'locations': {},
+            }
+            if sentence_number == "HEADLINE":
+                data['headline'] = True
+            else:
+                data['headline'] = False
+                data['locations'][sentence_number] = []  #TODO update with location in sentence
+            merged[name] = data
+    return merged
 
-print(merged)
+
+a = extract_entitities_article(article)
+print(merge_entities(a))
 
 '''
-Calculate the relevance score for each of the merged entity in the 
+Calculate the relevance score for each of the merged entity in the
 input and return the three entities with the highest relevance score.
 
 Assume entities is a dictionary of key: entity and value: list of sentence
@@ -126,7 +179,7 @@ indices
 '''
 def relevanceScore(entities):
     # not finalized, weight the impact of a mention in the headline
-    weight = 0.5 
+    weight = 0.5
     scores = []
     for entity in entities:
         score = 0
@@ -159,8 +212,7 @@ def relevanceScore(entities):
     return result
 
 # test for function relevanceScore
-entities = {"Keith Lucas": [1,3,4,6,8,100], "Megan Zhao": [0], "Quinn": [103], "John Smith": [12,367],
-"Minnesota": [34,56], "North Dakota": [2,3]}
-headline = "Minnesota is freezing"
-print(relevanceScore(entities))
-
+# entities = {"Keith Lucas": [1,3,4,6,8,100], "Megan Zhao": [0], "Quinn": [103], "John Smith": [12,367],
+# "Minnesota": [34,56], "North Dakota": [2,3]}
+# headline = "Minnesota is freezing"
+# print(relevanceScore(entities))
