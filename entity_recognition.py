@@ -177,6 +177,7 @@ input and return the three entities with the highest relevance score.
 Assume entities is a dictionary of key: entity and value: list of sentence
 indices
 '''
+# Parameters should be alpha/headline weight, entity, total num sentences
 def relevanceScore(entities):
     # not finalized, weight the impact of a mention in the headline
     weight = 0.5
