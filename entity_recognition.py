@@ -177,6 +177,17 @@ input and return the three entities with the highest relevance score.
 Assume entities is a dictionary of key: entity and value: list of sentence
 indices
 '''
+
+def relevanceScore(alpha, entity, numOfSentences):
+	score = 0
+	if entity['headline'] == True:
+		 score += alpha
+	# number of sentences the entity mentioned, or number of times the entity mentioned
+	# loop through entity['locations'] to find first location?
+	firstLocation = min([key for key in entity['locations']]) + 1
+	score += len(entity['locations']) / (numOfSentences * firstLocation)
+	return score
+'''
 # Parameters should be alpha/headline weight, entity, total num sentences
 def relevanceScore(entities):
     # not finalized, weight the impact of a mention in the headline
@@ -211,6 +222,8 @@ def relevanceScore(entities):
             third = score
             result[2] = entity
     return result
+'''
+
 
 # test for function relevanceScore
 # entities = {"Keith Lucas": [1,3,4,6,8,100], "Megan Zhao": [0], "Quinn": [103], "John Smith": [12,367],
