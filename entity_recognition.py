@@ -88,7 +88,7 @@ That may be the only thing that Mr. Ellison and Mr. Wardlow agree on. Asked how 
 """
 
 
-def extract_entitities_article(article):
+def extract_entities_article(article):
     '''
     Returns a list of (unmerged) entities from the article.
 
@@ -115,7 +115,7 @@ def extract_entitities_article(article):
     return named_entities
 
 
-def extract_entitities_headline(headline):
+def extract_entities_headline(headline):
     '''
     Returns a list of (unmerged) entities from the article.
 
@@ -167,7 +167,7 @@ def merge_entities(entities):
     return merged
 
 
-a = extract_entitities_article(article)
+a = extract_entities_article(article)
 print(merge_entities(a))
 
 '''
