@@ -179,14 +179,14 @@ indices
 '''
 
 def relevanceScore(alpha, entity, numOfSentences):
-	score = 0
-	if entity['headline'] == True:
-		 score += alpha
-	# number of sentences the entity mentioned, or number of times the entity mentioned
-	# loop through entity['locations'] to find first location?
-	firstLocation = min([key for key in entity['locations']]) + 1
-	score += len(entity['locations']) / (numOfSentences * firstLocation)
-	return score
+    score = 0
+    if entity['headline']:
+        score += alpha
+    # number of sentences the entity mentioned, or number of times the entity mentioned
+    # loop through entity['locations'] to find first location?
+    firstLocation = min([key for key in entity['locations']]) + 1
+    score += len(entity['locations']) / (numOfSentences * firstLocation)
+    return score
 '''
 # Parameters should be alpha/headline weight, entity, total num sentences
 def relevanceScore(entities):
