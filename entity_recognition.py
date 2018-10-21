@@ -170,15 +170,15 @@ def merge_entities(entities):
 a = extract_entities_article(article)
 print(merge_entities(a))
 
-'''
-Calculate the relevance score for each of the merged entity in the
-input and return the three entities with the highest relevance score.
-
-Assume entities is a dictionary of key: entity and value: list of sentence
-indices
-'''
 
 def relevanceScore(alpha, entity, numOfSentences):
+    '''
+    Calculate the relevance score for each of the merged entity in the
+    input and return the three entities with the highest relevance score.
+
+    Assume entities is a dictionary of key: entity and value: list of sentence
+    indices
+    '''
     score = 0
     if entity['headline']:
         score += alpha
