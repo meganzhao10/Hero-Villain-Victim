@@ -6,9 +6,9 @@ from nltk import (
 # entity_categories = ['GPE', 'PERSON', 'ORGANIZATION']
 short_article = "Saudi Arabia was preparing an alternative explanation of the fate of a dissident journalist on Monday, saying he died at the Saudi Consulate in Istanbul two weeks ago in an interrogation gone wrong, according to a person familiar with the kingdom’s plans."
 article = """
-When Keith Ellison started his bid to become Minnesota’s next attorney general, he had formidable advantages.
+When Keith Ellison started his bid to become Minnesota’s next attorney general, Keith Ellison had formidable advantages.
 
-An outspoken progressive who had served in Congress for more than a decade, Mr. Ellison was one of the most recognizable politicians in the state. As deputy chairman of the Democratic National Committee, he had a national profile that has helped him raise nearly twice as much money as his Republican challenger, Doug Wardlow, a lawyer. On top of that, there was history: Minnesota has not elected a Republican attorney general since 1966.
+An outspoken progressive who had served in Congress for more than a decade, Mr. Ellison was one of the most recognizable politicians in the state. As deputy chairman of the Democratic National Committee, he had a national profile that has helped him raise nearly twice as much money as his Republican challenger, Doug Wardlow, a lawyer. On top of that, there was history: Minnesota has not elected a Republican attorney general since 1966 in Minnesota.
 
 But in recent weeks, Mr. Ellison’s edge appears to be evaporating, amid claims by his ex-girlfriend, Karen Monahan, that he mistreated her during their long-term relationship. Ms. Monahan has accused him of causing emotional pain through infidelity and dishonesty when they were a couple and said he had once tried to drag her off a bed after an argument while screaming obscenities at her.
 
@@ -96,22 +96,34 @@ def extract_entities_article(article):
     '''
     sentences = sent_tokenize(article)
     named_entities = []
-
     for i in range(len(sentences)):
         sentence = sentences[i]
         tokens = word_tokenize(sentence)
         tagged_sentences = pos_tag(tokens)
         chunked_entities = ne_chunk(tagged_sentences)
+        
+        locationsFound = {}
 
         for tree in chunked_entities:
             if hasattr(tree, 'label'):
                 entity = {}
                 entity_name = ' '.join(c[0] for c in tree.leaves())
                 sentence_number = i
-                # TODO @Quinn, @Megan extract location of entity within sentence (index??)
-                entity = (entity_name, sentence_number)
-                named_entities.append(entity)
 
+                index_list = []
+                lastIndex = locationsFound.get(entity_name, 0)
+                length = len(entity_name.split())
+                for j in range(lastIndex, len(tokens) - length):
+                    if " ".join(tokens[j:j + length]) == entity_name:
+                        locationsFound[entity_name] = j + length
+                        if length == 1:
+                            index_list.append(j)
+                        else:
+                            index_list += [j, j + length - 1]
+                        break
+                
+                entity = (entity_name, sentence_number, index_list)
+                named_entities.append(entity)
     return named_entities
 
 
@@ -140,7 +152,7 @@ def merge_entities(entities):
     merged = {}
 
     for entity in entities:
-        name, sentence_number = entity
+        name, sentence_number, index_list = entity
         if name in merged:  # TODO replace this line with actual merging
             entity_data = merged[name]
             entity_data['count'] += 1
@@ -149,10 +161,9 @@ def merge_entities(entities):
             else:
                 locations = entity_data['locations']
                 if sentence_number in locations:
-                    # TODO update with sentence locations
-                    pass
+                    locations[sentence_number] += index_list
                 else:
-                    locations[sentence_number] = []
+                    locations[sentence_number] = index_list
         else:
             data = {
                 'count': 1,
@@ -162,7 +173,7 @@ def merge_entities(entities):
                 data['headline'] = True
             else:
                 data['headline'] = False
-                data['locations'][sentence_number] = []  #TODO update with location in sentence
+                data['locations'][sentence_number] = index_list  #TODO update with location in sentence
             merged[name] = data
     return merged
 
@@ -170,7 +181,7 @@ def merge_entities(entities):
 a = extract_entities_article(article)
 print(merge_entities(a))
 
-
+# parameters: alpha/headline weight, entity object, total number of sentences
 def relevanceScore(alpha, entity, numOfSentences):
     '''
     Calculate the relevance score for each of the merged entity in the
@@ -182,26 +193,11 @@ def relevanceScore(alpha, entity, numOfSentences):
     score = 0
     if entity['headline']:
         score += alpha
-    # number of sentences the entity mentioned, or number of times the entity mentioned
-    # loop through entity['locations'] to find first location?
     firstLocation = min([key for key in entity['locations']]) + 1
-    score += len(entity['locations']) / (numOfSentences * firstLocation)
+    score += entity['count'] / (numOfSentences * firstLocation)
     return score
-'''
-# Parameters should be alpha/headline weight, entity, total num sentences
-def relevanceScore(entities):
-    # not finalized, weight the impact of a mention in the headline
-    weight = 0.5
-    scores = []
-    for entity in entities:
-        score = 0
-        if entity in headline:
-            score += weight
-	# entities[entity][0]: first location where the entity is mentioned (starts with 1)
-        score += len(entities[entity]) / (len(sentences) * (entities[entity][0] + 1))
-        scores.append((entity, score))
-    print(sorted(scores, key = lambda x: -x[1]))
 
+'''
     # pick three top
     first, second, third = -1, -1, -1
     result = [None, None, None]
@@ -223,10 +219,3 @@ def relevanceScore(entities):
             result[2] = entity
     return result
 '''
-
-
-# test for function relevanceScore
-# entities = {"Keith Lucas": [1,3,4,6,8,100], "Megan Zhao": [0], "Quinn": [103], "John Smith": [12,367],
-# "Minnesota": [34,56], "North Dakota": [2,3]}
-# headline = "Minnesota is freezing"
-# print(relevanceScore(entities))
