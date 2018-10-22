@@ -5,6 +5,8 @@ from nltk import (
 # from nltk.tokenize import MWETokenizer
 # entity_categories = ['GPE', 'PERSON', 'ORGANIZATION']
 short_article = "Saudi Arabia was preparing an alternative explanation of the fate of a dissident journalist on Monday, saying he died at the Saudi Consulate in Istanbul two weeks ago in an interrogation gone wrong, according to a person familiar with the kingdom’s plans."
+
+headline = "Keith Ellison’s Campaign Overshadowed by Ex-Girlfriend’s Allegations"
 article = """
 When Keith Ellison started his bid to become Minnesota’s next attorney general, Keith Ellison had formidable advantages.
 
@@ -88,6 +90,24 @@ That may be the only thing that Mr. Ellison and Mr. Wardlow agree on. Asked how 
 """
 
 
+class Entity:
+    name = ""
+    count = 0
+    locations = {}
+    headline = False
+
+    def __init__(self, name, sentence_number=None, index_list=None, headline=False):
+        self.name = name
+        self.count = 1
+        if sentence_number is not None and index_list is not None:
+            self.locations = {sentence_number: index_list}
+        if headline:
+            self.headline = True
+
+    def __repr__(self):
+        return f'(Name: {self.name}, Count: {self.count}, Headline: {self.headline}, Locations: {self.locations})'
+
+
 def extract_entities_article(article):
     '''
     Returns a list of (unmerged) entities from the article.
@@ -101,7 +121,7 @@ def extract_entities_article(article):
         tokens = word_tokenize(sentence)
         tagged_sentences = pos_tag(tokens)
         chunked_entities = ne_chunk(tagged_sentences)
-        
+
         locationsFound = {}
 
         for tree in chunked_entities:
@@ -121,7 +141,7 @@ def extract_entities_article(article):
                         else:
                             index_list += [j, j + length - 1]
                         break
-                
+
                 entity = (entity_name, sentence_number, index_list)
                 named_entities.append(entity)
     return named_entities
@@ -142,44 +162,45 @@ def extract_entities_headline(headline):
         if hasattr(tree, 'label'):
             entity = {}
             entity_name = ' '.join(c[0] for c in tree.leaves())
-            entity = (entity_name, "HEADLINE")
+            entity = (entity_name, "HEADLINE", [])
             named_entities.append(entity)
 
     return named_entities
 
 
 def merge_entities(entities):
-    merged = {}
-
-    for entity in entities:
-        name, sentence_number, index_list = entity
-        if name in merged:  # TODO replace this line with actual merging
-            entity_data = merged[name]
-            entity_data['count'] += 1
-            if sentence_number == "HEADLINE":
-                entity_data['headline'] = True
-            else:
-                locations = entity_data['locations']
-                if sentence_number in locations:
-                    locations[sentence_number] += index_list
+    merged_entities = []
+    for temp_entity in entities:
+        name, sentence_number, index_list = temp_entity
+        entity_updated = False
+        for entity in merged_entities:
+            if entity.name == name:  # TODO replace this line with actual merging
+                entity.count += 1
+                if sentence_number == "HEADLINE":
+                    entity.headline = True
                 else:
-                    locations[sentence_number] = index_list
-        else:
-            data = {
-                'count': 1,
-                'locations': {},
-            }
+                    locations = entity.locations
+                    if sentence_number in locations:
+                        locations[sentence_number] += index_list
+                    else:
+                        locations[sentence_number] = index_list
+                entity_updated = True
+                break
+        if not entity_updated:  # create new entity if no update happened
             if sentence_number == "HEADLINE":
-                data['headline'] = True
+                entity = Entity(name, headline=True)
             else:
-                data['headline'] = False
-                data['locations'][sentence_number] = index_list  #TODO update with location in sentence
-            merged[name] = data
-    return merged
+                entity = Entity(name, sentence_number=sentence_number, index_list=index_list)
+            merged_entities.append(entity)
+    return merged_entities
 
 
+# TESTING
+h = extract_entities_headline(headline)  # TODO this results in weird output, headline may need to be treated differently
 a = extract_entities_article(article)
-print(merge_entities(a))
+for e in merge_entities(a):
+    print(e)
+
 
 # parameters: alpha/headline weight, entity object, total number of sentences
 def relevanceScore(alpha, entity, numOfSentences):
@@ -191,11 +212,12 @@ def relevanceScore(alpha, entity, numOfSentences):
     indices
     '''
     score = 0
-    if entity['headline']:
+    if entity.headline:
         score += alpha
-    firstLocation = min([key for key in entity['locations']]) + 1
-    score += entity['count'] / (numOfSentences * firstLocation)
+    firstLocation = min([key for key in entity.locations]) + 1
+    score += entity.count / (numOfSentences * firstLocation)
     return score
+
 
 '''
     # pick three top
