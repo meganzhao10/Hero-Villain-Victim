@@ -6,12 +6,15 @@
 
 # work to do - 
 ## currently can extract from a url
-## but prints <p> within the texts...
 
-
+##I currently have the texts print to the terminal
+## stored as strings in list
+## I could try to make it store into csv if that's easier for other people's work
 from bs4 import BeautifulSoup
 
 import requests
+import csv
+
 
 url = input("Enter a website to extract the URL's from: ")
 
