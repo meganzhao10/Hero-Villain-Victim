@@ -35,4 +35,6 @@ print("Title is",soup.title.string)
 content = soup.find_all('p')
 #title = soup.find_all('h2')
 #print(title)
-print(content)
+#print(content)
+for i in soup.find_all("p"):
+    print(i.get_text())
