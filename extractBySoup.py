@@ -36,5 +36,8 @@ content = soup.find_all('p')
 #title = soup.find_all('h2')
 #print(title)
 #print(content)
+l = list()
 for i in soup.find_all("p"):
+    l.append(i.get_text())
     print(i.get_text())
+#print(l)
