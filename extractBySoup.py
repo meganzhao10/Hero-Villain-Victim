@@ -19,10 +19,10 @@ r  = requests.get(url)
 
 data = r.text
 
-soup = BeautifulSoup(data)
+soup = BeautifulSoup(data,"lxml")
 #print( soup.prettify())
 headline = soup.title.string
-print("title is ",soup.title.string)
+print("Title is",soup.title.string)
 #print("title is ")
 #print(soup.get_text())
 
