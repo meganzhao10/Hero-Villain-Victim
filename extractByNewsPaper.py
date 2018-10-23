@@ -9,9 +9,9 @@ import nltk
 
 #import requests
 
-#url = input("Enter a website to extract the URL's from: ")
+url = input("Enter a website to extract the URL's from: ")
 #testing url
-url = "https://www.bbc.com/news/world-latin-america-45944164"
+#url = "https://www.bbc.com/news/world-latin-america-45944164"
 
 #r  = requests.get(url)
 
