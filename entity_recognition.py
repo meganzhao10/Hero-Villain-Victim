@@ -4,7 +4,22 @@ from nltk import (
 from newspaper import Article
 
 
-
+NAME_PREFIXES = (
+    'mr',
+    'mrs',
+    'ms',
+    'miss',
+    'dr',
+    'doctor',
+    'sgt',
+    'sergeant',
+    'rev',
+    'reverend',
+    'chief',
+    'executive',
+    'officer',
+    'president',
+)
 
 url = input("Enter a website to extract the URL's from: ")
 content = Article(url)
@@ -105,17 +120,21 @@ article = content.text
 
 class Entity:
     name = ""
+    normalized_name = ""
     count = 0
     locations = {}
     headline = False
+    name_forms = []
 
-    def __init__(self, name, sentence_number=None, index_list=None, headline=False):
+    def __init__(self, name, normalized_name, sentence_number=None, index_list=None, headline=False):
         self.name = name
+        self.normalize_name = normalized_name
         self.count = 1
         if sentence_number is not None and index_list is not None:
             self.locations = {sentence_number: index_list}
         if headline:
             self.headline = True
+        self.name_forms.append(name)
 
     def __repr__(self):
         return f'(Name: {self.name}, Count: {self.count}, Headline: {self.headline}, Locations: {self.locations})'
@@ -181,32 +200,61 @@ def extract_entities_headline(headline):
     return named_entities
 
 
-def merge_entities(entities):
+'''
+Merging plan:
+1. normalize name to remove prefix and 's
+2. find existing entities of which normalized name is a substring of that entities name
+3. if there is one match, add it to that entity. otherwise make a new one
+
+-best name function (maybe)
+
+'''
+def merge_entities(temp_entities):
     merged_entities = []
-    for temp_entity in entities:
+    for temp_entity in temp_entities:
         name, sentence_number, index_list = temp_entity
-        entity_updated = False
+        normalized_name = normalize_name(name)
+        matches = []
         for entity in merged_entities:
-            if entity.name == name:  # TODO replace this line with actual merging
-                entity.count += 1
-                if sentence_number == "HEADLINE":
-                    entity.headline = True
-                else:
-                    locations = entity.locations
-                    if sentence_number in locations:
-                        locations[sentence_number] += index_list
-                    else:
-                        locations[sentence_number] = index_list
-                entity_updated = True
-                break
-        if not entity_updated:  # create new entity if no update happened
+            if normalized_name in entity.normalized_name:
+                matches.append(entity)
+
+        if len(matches) == 1:
+            entity = matches[0]
+            entity.count += 1
+            # TODO update name_forms
             if sentence_number == "HEADLINE":
-                entity = Entity(name, headline=True)
+                entity.headline = True
             else:
-                entity = Entity(name, sentence_number=sentence_number, index_list=index_list)
+                locations = entity.locations
+                if sentence_number in locations:
+                    locations[sentence_number] += index_list
+                else:
+                    locations[sentence_number] = index_list
+
+        else:
+            if sentence_number == "HEADLINE":
+                entity = Entity(name, normalized_name, headline=True)
+            else:
+                entity = Entity(name, normalized_name, sentence_number=sentence_number, index_list=index_list)
             merged_entities.append(entity)
     return merged_entities
 
+
+# TODO implement normalize name function
+def normalize_name(name):
+    for i, t in enumerate(name):
+        if t.lower().strip().strip('.') not in NAME_PREFIXES:
+            break
+    l = name[i:]
+    r = ' '.join(l)
+    # try:
+    #     s = codecs.decode("’s", 'utf-8')
+    # except:
+    #     s = "’s"
+    # if r.endswith("'s") or r.endswith(s):
+    #     r = r[:-2]
+    return r
 
 # TESTING
 h = extract_entities_headline(headline)  # TODO this results in weird output, headline may need to be treated differently
