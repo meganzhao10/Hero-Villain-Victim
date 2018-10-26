@@ -54,6 +54,7 @@ def extract_entities_article(article):
     '''
     sentences = sent_tokenize(article)
     named_entities = []
+    recoganized_types = ["PERSON", "ORGANIZATION", "GPE", "POSITION"]
     for i in range(len(sentences)):
         sentence = sentences[i]
         tokens = word_tokenize(sentence)
@@ -63,12 +64,12 @@ def extract_entities_article(article):
         locationsFound = {}
 
         for tree in chunked_entities:
-            if hasattr(tree, 'label'):
+            if hasattr(tree, 'label') and tree.label() in recoganized_types:
                 # TODO add check for entity type (maybe check after merging to avoid miscategorization??)
                 entity = {}
                 entity_name = ' '.join(c[0] for c in tree.leaves())
                 sentence_number = i
-
+                print(tree.label())
                 index_list = []
                 lastIndex = locationsFound.get(entity_name, 0)
                 length = len(entity_name.split())
@@ -89,7 +90,7 @@ def extract_entities_article(article):
 # TODO fix this function. currently results in weird output, headline may need to be treated differently
 def extract_entities_headline(headline):
     '''
-    Returns a list of (unmerged) entities from the article.
+    Returns a list of (unmerged) entities from the article headline.
 
     Each entity is a tuple (entity name, "HEADLINE", locations)
     '''
