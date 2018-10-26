@@ -207,6 +207,5 @@ headline = content.title
 article = content.text
 
 a = extract_entities_article(article)
-print(a)
 for e in merge_entities(a):
     print(e)
