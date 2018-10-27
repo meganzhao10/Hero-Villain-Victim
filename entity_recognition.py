@@ -1,3 +1,4 @@
+import codecs
 from nltk import (
      word_tokenize, pos_tag, ne_chunk, sent_tokenize,
  )
@@ -42,7 +43,7 @@ class Entity:
 
     def __repr__(self):
         return '(Name: {name}, Count: {count}, Headline: {headline}, Locations: {locations})'.format(
-            name=self.name, count=self.count, headline=self.headline, locations=self.locations
+                name=self.name, count=self.count, headline=self.headline, locations=self.locations
         )
 
 
@@ -65,11 +66,10 @@ def extract_entities_article(article):
 
         for tree in chunked_entities:
             if hasattr(tree, 'label') and tree.label() in recoganized_types:
-                # TODO add check for entity type (maybe check after merging to avoid miscategorization??)
+                # TODO: Currently checking entity type before merging, but adding type to entity to check after merging?
                 entity = {}
                 entity_name = ' '.join(c[0] for c in tree.leaves())
                 sentence_number = i
-                print(tree.label())
                 index_list = []
                 lastIndex = locationsFound.get(entity_name, 0)
                 length = len(entity_name.split())
@@ -143,7 +143,6 @@ def merge_entities(temp_entities):
     return merged_entities
 
 
-# TODO implement normalize name function
 def normalize_name(name):
     name = name.split()
     for i, word in enumerate(name):
@@ -151,13 +150,12 @@ def normalize_name(name):
             break
     no_prefix = name[i:]
     normalized = ' '.join(no_prefix)
-    # try:
-    #     s = codecs.decode("’s", 'utf-8')
-    # except:
-    #     s = "’s"
-    # if normalized.endswith("'s") or normalized.endswith(s):
-    #     normalized = normalized[:-2]
-    if normalized.endswith("'s"):
+    # when input text is unicode encoded in utf-8
+    try:
+        s = codecs.decode("’s", 'utf-8')
+    except:
+        s = "’s"
+    if normalized.endswith("'s") or normalized.endswith(s):
         normalized = normalized[:-2]
     return normalized
 
@@ -174,12 +172,14 @@ def relevanceScore(alpha, entity, numOfSentences):
     return score
 
 
-# TODO implement function to select three entities with highest relevance score
-'''
-    # pick three top
+def selectHighScoreEntities(alpha, entity_list, numOfSentences):
+    '''
+    Select three entities with highest relevance score
+    '''
     first, second, third = -1, -1, -1
     result = [None, None, None]
-    for entity,score in scores:
+    for entity in entity_list:
+        score = relevanceScore(alpha, entity, numOfSentences) 
         if score > first:
             third = second
             second = first
@@ -196,7 +196,7 @@ def relevanceScore(alpha, entity, numOfSentences):
             third = score
             result[2] = entity
     return result
-'''
+
 
 # TESTING
 url = input("Enter a website to extract the URL's from: ")
@@ -208,5 +208,9 @@ headline = content.title
 article = content.text
 
 a = extract_entities_article(article)
-for e in merge_entities(a):
+merge_entities = merge_entities(a)
+for e in merge_entities:
+    print(e)
+highest_score_entities = selectHighScoreEntities(0.5, merge_entities, 50)
+for e in highest_score_entities:
     print(e)
