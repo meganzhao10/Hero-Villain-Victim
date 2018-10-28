@@ -5,6 +5,8 @@ from nltk import (
 from newspaper import Article
 
 
+RECOGNIZED_TYPES = ["PERSON", "ORGANIZATION", "GPE", "POSITION"]
+
 NAME_PREFIXES = (
     'mr',
     'mrs',
@@ -39,7 +41,7 @@ class Entity:
             self.locations = {sentence_number: index_list}
         if headline:
             self.headline = True
-        self.name_forms.append(name)
+        self.name_forms = [name]
 
     def __repr__(self):
         return '(Name: {name}, Count: {count}, Headline: {headline}, Locations: {locations})'.format(
@@ -49,14 +51,15 @@ class Entity:
 
 def extract_entities_article(article):
     '''
-    Returns a list of (unmerged) entities from the article.
+    Returns a tuple where the first item is a list of (unmerged) entities from
+    the article and the second item is the number of sentences in the article.
 
     Each entity is a tuple (entity name, sentence number, locations in sentence)
     '''
     sentences = sent_tokenize(article)
     named_entities = []
-    recoganized_types = ["PERSON", "ORGANIZATION", "GPE", "POSITION"]
-    for i in range(len(sentences)):
+    num_sentences = len(sentences)
+    for i in range(num_sentences):
         sentence = sentences[i]
         tokens = word_tokenize(sentence)
         tagged_sentences = pos_tag(tokens)
@@ -65,7 +68,7 @@ def extract_entities_article(article):
         locationsFound = {}
 
         for tree in chunked_entities:
-            if hasattr(tree, 'label') and tree.label() in recoganized_types:
+            if hasattr(tree, 'label') and tree.label() in RECOGNIZED_TYPES:
                 # TODO: Currently checking entity type before merging, but adding type to entity to check after merging?
                 entity = {}
                 entity_name = ' '.join(c[0] for c in tree.leaves())
@@ -84,7 +87,7 @@ def extract_entities_article(article):
 
                 entity = (entity_name, sentence_number, index_list)
                 named_entities.append(entity)
-    return named_entities
+    return (named_entities, num_sentences)
 
 
 # TODO fix this function. currently results in weird output, headline may need to be treated differently
@@ -111,6 +114,10 @@ def extract_entities_headline(headline):
 
 
 def merge_entities(temp_entities):
+    '''
+    Merges the list of temporary entity tuples into a list of Entity objects.
+    Basis of merging algorithm from Function from NU Infolab News Context Project (https://github.com/NUinfolab/context).
+    '''
     merged_entities = []
     for temp_entity in temp_entities:
         name, sentence_number, index_list = temp_entity
@@ -124,7 +131,8 @@ def merge_entities(temp_entities):
         if len(matches) == 1:
             entity = matches[0]
             entity.count += 1
-            # TODO update name_forms
+            if name not in entity.name_forms:
+                entity.name_forms.append(name)
             if sentence_number == "HEADLINE":
                 entity.headline = True
             else:
@@ -144,6 +152,10 @@ def merge_entities(temp_entities):
 
 
 def normalize_name(name):
+    '''
+    Removes prefix and 's from the given name.
+    Function from NU Infolab News Context Project (https://github.com/NUinfolab/context).
+    '''
     name = name.split()
     for i, word in enumerate(name):
         if word.lower().strip().strip('.') not in NAME_PREFIXES:
@@ -160,26 +172,26 @@ def normalize_name(name):
     return normalized
 
 
-def relevanceScore(alpha, entity, numOfSentences):
+def relevanceScore(alpha, entity, num_sentences):
     '''
     Calculate the relevance score for the given entity.
     '''
     score = 0
     if entity.headline:
         score += alpha
-    firstLocation = min([key for key in entity.locations]) + 1
-    score += entity.count / (numOfSentences * firstLocation)
+    first_location = min([key for key in entity.locations]) + 1
+    score += entity.count / (num_sentences * first_location)
     return score
 
 
-def selectHighScoreEntities(alpha, entity_list, numOfSentences):
+def selectHighScoreEntities(alpha, entity_list, num_sentences):
     '''
-    Select three entities with highest relevance score
+    Returns a list of the three entities with highest relevance score.
     '''
     first, second, third = -1, -1, -1
     result = [None, None, None]
     for entity in entity_list:
-        score = relevanceScore(alpha, entity, numOfSentences) 
+        score = relevanceScore(alpha, entity, num_sentences)
         if score > first:
             third = second
             second = first
@@ -198,19 +210,25 @@ def selectHighScoreEntities(alpha, entity_list, numOfSentences):
     return result
 
 
-# TESTING
-url = input("Enter a website to extract the URL's from: ")
-content = Article(url)
-content.download()
-content.parse()
+def test():
+    url = input("Enter a website to extract the URL's from: ")
+    content = Article(url)
+    content.download()
+    content.parse()
 
-headline = content.title
-article = content.text
+    headline = content.title
+    article = content.text
 
-a = extract_entities_article(article)
-merge_entities = merge_entities(a)
-for e in merge_entities:
-    print(e)
-highest_score_entities = selectHighScoreEntities(0.5, merge_entities, 50)
-for e in highest_score_entities:
-    print(e)
+    temp_entities, num_sentences = extract_entities_article(article)
+    merged_entities = merge_entities(temp_entities)
+    print('Merged Entities:')
+    for e in merged_entities:
+        print(e)
+    highest_score_entities = selectHighScoreEntities(0.5, merged_entities, num_sentences)
+    # TODO add all entities in headline to role assignment list (first need to implement headline extraction)
+    print("Highest Scoring Entities:")
+    for e in highest_score_entities:
+        print(e)
+
+
+test()

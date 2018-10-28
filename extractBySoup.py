@@ -1,10 +1,10 @@
 ##need to install:
 # pip install beautifulsoup4
 # pip install lxml
-# pip install requests 
+# pip install requests
 # pip install html5lib
 
-# work to do - 
+# work to do -
 ## currently can extract from a url
 
 ##I currently have the texts print to the terminal
