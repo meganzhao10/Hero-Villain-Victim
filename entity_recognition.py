@@ -1,6 +1,6 @@
 import codecs
 from nltk import (
-     word_tokenize, pos_tag, ne_chunk, sent_tokenize,
+     ne_chunk, pos_tag, sent_tokenize, word_tokenize,
  )
 from newspaper import Article
 
@@ -45,7 +45,7 @@ class Entity:
 
     def __repr__(self):
         return '(Name: {name}, Count: {count}, Headline: {headline}, Locations: {locations})'.format(
-                name=self.name, count=self.count, headline=self.headline, locations=self.locations
+                name=self.name, count=self.count, headline=self.headline, locations=self.locations,
         )
 
 
@@ -66,7 +66,6 @@ def extract_entities_article(article):
         chunked_entities = ne_chunk(tagged_sentences)
 
         locationsFound = {}
-
         for tree in chunked_entities:
             if hasattr(tree, 'label') and tree.label() in RECOGNIZED_TYPES:
                 # TODO: Currently checking entity type before merging, but adding type to entity to check after merging?
@@ -172,7 +171,7 @@ def normalize_name(name):
     return normalized
 
 
-def relevanceScore(alpha, entity, num_sentences):
+def relevance_score(alpha, entity, num_sentences):
     '''
     Calculate the relevance score for the given entity.
     '''
@@ -184,14 +183,14 @@ def relevanceScore(alpha, entity, num_sentences):
     return score
 
 
-def selectHighScoreEntities(alpha, entity_list, num_sentences):
+def select_high_score_entities(alpha, entity_list, num_sentences):
     '''
     Returns a list of the three entities with highest relevance score.
     '''
     first, second, third = -1, -1, -1
     result = [None, None, None]
     for entity in entity_list:
-        score = relevanceScore(alpha, entity, num_sentences)
+        score = relevance_score(alpha, entity, num_sentences)
         if score > first:
             third = second
             second = first
@@ -224,11 +223,13 @@ def test():
     print('Merged Entities:')
     for e in merged_entities:
         print(e)
-    highest_score_entities = selectHighScoreEntities(0.5, merged_entities, num_sentences)
-    # TODO add all entities in headline to role assignment list (first need to implement headline extraction)
+    highest_score_entities = select_high_score_entities(0.5, merged_entities, num_sentences)
     print("Highest Scoring Entities:")
     for e in highest_score_entities:
         print(e)
+
+    headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
+    top_entities = highest_score_entities + headline_entities
 
 
 test()
