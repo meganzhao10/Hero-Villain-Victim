@@ -105,6 +105,7 @@ def extract_entities_article(article):
 
 
 # TODO fix this function. currently results in weird output, headline may need to be treated differently
+# TODO remove this function if we end up using other one
 def extract_entities_headline(headline):
     '''
     Returns a list of (unmerged) entities from the article headline.
