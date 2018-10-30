@@ -2,8 +2,9 @@ import codecs
 from nltk import (
      ne_chunk, pos_tag, sent_tokenize, word_tokenize,
  )
-from newspaper import Article
 
+#pip3 install news-please
+from newsplease import NewsPlease
 
 RECOGNIZED_TYPES = ["PERSON", "ORGANIZATION", "GPE", "POSITION"]
 
@@ -211,10 +212,7 @@ def select_high_score_entities(alpha, entity_list, num_sentences):
 
 def test():
     url = input("Enter a website to extract the URL's from: ")
-    content = Article(url)
-    content.download()
-    content.parse()
-
+    content = NewsPlease.from_url('url')
     headline = content.title
     article = content.text
 
