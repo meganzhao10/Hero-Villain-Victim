@@ -1,3 +1,12 @@
+'''
+Potential concern/features to use in the future
+-Exclude the location tag at the beginning of the article
+-Dealing with the position (the witness...)
+'''
+
+
+
+
 import codecs
 from nltk import (
      ne_chunk, pos_tag, sent_tokenize, word_tokenize,
@@ -250,14 +259,14 @@ def get_headline_entities(headline, merged_entities):
 
 
 def test():
+    
     url = input("Enter a website to extract the URL's from: ")
     content = Article(url)
     content.download()
     content.parse()
-
+    
     headline = content.title
     article = content.text
-
     print('Headline: ', headline)
 
     temp_entities, num_sentences = extract_entities_article(article)
