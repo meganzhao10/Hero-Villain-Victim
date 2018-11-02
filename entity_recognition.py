@@ -212,7 +212,7 @@ def get_headline_entities(headline, merged_entities):
     tokens = word_tokenize(headline)
     for entity in merged_entities:
         for name in entity.name_forms:
-            count = headline.count(name)
+            count = headline.count(name)  # TODO can't just count, need to make name is not substring (e.g. South vs Southern)
             if count > 0:
                 index_list = get_locations(name, tokens, locations_found)
                 headline = headline.replace(name, '')  # remove to avoid double counting
@@ -242,7 +242,7 @@ def test():
         print(e)
     print('------------------------')
     highest_score_entities = select_high_score_entities(0.5, merged_entities, num_sentences)
-    
+
     headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
     top_entities = highest_score_entities + headline_entities
     print("------------------------------------------")
