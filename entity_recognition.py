@@ -11,7 +11,14 @@ from nltk import (
  )
 
 # pip3 install news-please
+# pip3 install newspaper3k
 from newsplease import NewsPlease
+from newspaper import Article
+
+# pip install beautifulsoup4
+# pip install lxml
+# pip install html5lib
+from bs4 import BeautifulSoup
 
 RECOGNIZED_TYPES = ["PERSON", "ORGANIZATION", "GPE", "POSITION"]
 
@@ -226,13 +233,46 @@ def get_headline_entities(headline, merged_entities):
     print('---------------')  # TODO remove after testing
 
 
-def test():
 
+def extract_by_newspaper():
+    url = input("Enter a website to extract the URL's from: ")
+    content = Article(url)
+    content.download()
+    content.parse()
+
+    headline =content.title
+    article = content.text
+    
+    #print('Headline: ', headline)
+    return headline, aritcle
+
+
+def extract_by_newsplease():
     url = input("Enter a website to extract the URL's from: ")
     content = NewsPlease.from_url(url)
 
     headline = content.title
     article = content.text
+    
+    return headline, aritcle
+     
+     
+def extract_by_soup():
+    url = input("Enter a website to extract the URL's from: ")
+    content = BeautifulSoup(url,"lxml")
+    headline = content.title.string
+    article = soup.find_all('p')
+    articleList = list()
+    for i in content.find_all("p"):
+          articleList.append(i.get_text())
+          #print(i.get_text())
+          
+    return headline, aritcleList
+
+
+def test():
+
+
     print('Headline: ', headline)
     temp_entities, num_sentences = extract_entities_article(article)
     merged_entities = merge_entities(temp_entities)
