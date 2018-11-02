@@ -233,46 +233,36 @@ def get_headline_entities(headline, merged_entities):
     print('---------------')  # TODO remove after testing
 
 
-
-def extract_by_newspaper():
-    url = input("Enter a website to extract the URL's from: ")
+def extract_by_newspaper(url):
     content = Article(url)
     content.download()
     content.parse()
-
-    headline =content.title
-    article = content.text
-    
-    #print('Headline: ', headline)
-    return headline, aritcle
-
-
-def extract_by_newsplease():
-    url = input("Enter a website to extract the URL's from: ")
-    content = NewsPlease.from_url(url)
-
     headline = content.title
     article = content.text
-    
-    return headline, aritcle
-     
-     
-def extract_by_soup():
-    url = input("Enter a website to extract the URL's from: ")
-    content = BeautifulSoup(url,"lxml")
+    return headline, article
+
+
+def extract_by_newsplease(url):
+    content = NewsPlease.from_url(url)
+    headline = content.title
+    article = content.text
+    return headline, article
+
+
+def extract_by_soup(url):
+    content = BeautifulSoup(url, "lxml")
     headline = content.title.string
-    article = soup.find_all('p')
     articleList = list()
     for i in content.find_all("p"):
-          articleList.append(i.get_text())
-          #print(i.get_text())
-          
-    return headline, aritcleList
+        articleList.append(i.get_text())
+        # print(i.get_text())
+
+    return headline, articleList  # TODO modify output so article is string
 
 
 def test():
-
-
+    url = input("Enter a website to extract the URL's from: ")
+    headline, article = extract_by_newsplease(url)
     print('Headline: ', headline)
     temp_entities, num_sentences = extract_entities_article(article)
     merged_entities = merge_entities(temp_entities)
@@ -282,10 +272,8 @@ def test():
         print(e)
     print('------------------------')
     highest_score_entities = select_high_score_entities(0.5, merged_entities, num_sentences)
-
     headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
     top_entities = highest_score_entities + headline_entities
-    print("------------------------------------------")
     print("Top Entities")
     for e in top_entities:
         print(e)
