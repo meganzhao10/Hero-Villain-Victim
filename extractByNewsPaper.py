@@ -9,29 +9,36 @@ import nltk
 
 #import requests
 
-url = input("Enter a website to extract the URL's from: ")
-#testing url
-#url = "https://www.bbc.com/news/world-latin-america-45944164"
-
-#r  = requests.get(url)
-
-#data = r.text
 
 
-article = Article(url)
-article.download()
-article.parse()
 
-headline =article.title
-content = article.text
+def test():
+
+    
+    url = input("Enter a website to extract the URL's from: ")
+    content = Article(url)
+    content.download()
+    content.parse()
+
+    headline =content.title
+    article = content.text
+
+    print('Headline: ', headline)
+    temp_entities, num_sentences = extract_entities_article(article)
+    merged_entities = merge_entities(temp_entities)
+    get_headline_entities(headline, merged_entities)
+    print('Merged Entities:')
+    for e in merged_entities:
+        print(e)
+    print('------------------------')
+    highest_score_entities = select_high_score_entities(0.5, merged_entities, num_sentences)
+    
+    headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
+    top_entities = highest_score_entities + headline_entities
+    print("------------------------------------------")
+    print("Top Entities")
+    for e in top_entities:
+        print(e)
 
 
-print(headline)
-print(content)
-
-
-#one possible advantage is the keywords
-#need to install nltk
-#article.nlp()
-#keyWords = article.keywords
-#print(keyWords)
+test()
