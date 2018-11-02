@@ -1,10 +1,8 @@
 '''
-Potential concern/features to use in the future
+Potential concerns and possible features to implement in the future
 -Exclude the location tag at the beginning of the article
--Dealing with the position (the witness...)
+-Dealing with positions (the witness...)
 '''
-
-
 
 
 import codecs
@@ -12,7 +10,7 @@ from nltk import (
      ne_chunk, pos_tag, sent_tokenize, word_tokenize,
  )
 
-#pip3 install news-please
+# pip3 install news-please
 from newsplease import NewsPlease
 
 RECOGNIZED_TYPES = ["PERSON", "ORGANIZATION", "GPE", "POSITION"]
@@ -114,31 +112,6 @@ def extract_entities_article(article):
     return (named_entities, num_sentences)
 
 
-# TODO fix this function. currently results in weird output, headline may need to be treated differently
-# TODO remove this function if we end up using other one
-def extract_entities_headline(headline):
-    '''
-    Returns a list of (unmerged) entities from the article headline.
-
-    Each entity is a tuple (entity name, "HEADLINE", locations)
-    '''
-    named_entities = []
-    tokens = word_tokenize(headline)
-    tagged_sentences = pos_tag(tokens)
-    chunked_entities = ne_chunk(tagged_sentences)
-
-    for tree in chunked_entities:
-        if hasattr(tree, 'label'):
-            entity = {}
-            entity_name = ' '.join(c[0] for c in tree.leaves())
-            # TODO get locations within headline
-            entity = (entity_name, "HEADLINE", [])
-            named_entities.append(entity)
-
-    return named_entities
-
-
-# TODO remove checks for headline if end up extracting headlines using merged entities from text
 def merge_entities(temp_entities):
     '''
     Merges the list of temporary entity tuples into a list of Entity objects.
@@ -159,20 +132,14 @@ def merge_entities(temp_entities):
             entity.count += 1
             if name not in entity.name_forms:
                 entity.name_forms.append(name)
-            if sentence_number == "HEADLINE":
-                entity.headline = True
+            locations = entity.locations
+            if sentence_number in locations:
+                locations[sentence_number] += index_list
             else:
-                locations = entity.locations
-                if sentence_number in locations:
-                    locations[sentence_number] += index_list
-                else:
-                    locations[sentence_number] = index_list
+                locations[sentence_number] = index_list
         # otherwise make new entity
         else:
-            if sentence_number == "HEADLINE":
-                entity = Entity(name, normalized_name, headline=True)
-            else:
-                entity = Entity(name, normalized_name, sentence_number=sentence_number, index_list=index_list)
+            entity = Entity(name, normalized_name, sentence_number=sentence_number, index_list=index_list)
             merged_entities.append(entity)
     return merged_entities
 
@@ -240,7 +207,7 @@ def get_headline_entities(headline, merged_entities):
     '''
     Extracts the entities from the headline and updates merged_entities accordingly.
     '''
-    print("HEADLINE ENTITIES:") # TODO remove after testing
+    print("HEADLINE ENTITIES:")  # TODO remove after testing
     locations_found = {}
     tokens = word_tokenize(headline)
     for entity in merged_entities:
@@ -256,14 +223,14 @@ def get_headline_entities(headline, merged_entities):
                     entity.headline_locations += index_list
                 else:
                     entity.headline_locations = index_list
-    print('---------------') # TODO remove after testing
+    print('---------------')  # TODO remove after testing
 
 
 def test():
-    
+
     url = input("Enter a website to extract the URL's from: ")
-    content = NewsPlease.from_url('url')
-    
+    content = NewsPlease.from_url(url)
+
     headline = content.title
     article = content.text
     print('Headline: ', headline)
@@ -275,10 +242,6 @@ def test():
     for e in merged_entities:
         print(e)
     highest_score_entities = select_high_score_entities(0.5, merged_entities, num_sentences)
-    print("Highest Scoring Entities:")
-    for e in highest_score_entities:
-        print(e)
-
     headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
     top_entities = highest_score_entities + headline_entities
     print("Top Entities")
