@@ -130,6 +130,9 @@ def merge_entities(temp_entities):
         normalized_name = normalize_name(name)
         matches = []
         for entity in merged_entities:
+            if normalized_name == entity.normalized_name:
+                matches = [entity]
+                break
             if normalized_name in entity.normalized_name:
                 matches.append(entity)
 
