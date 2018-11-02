@@ -72,7 +72,7 @@ def get_locations(name, tokens, locations_found):
     index_list = []
     lastIndex = locations_found.get(name, 0)
     length = len(name.split())
-    for j in range(lastIndex, len(tokens) - length):
+    for j in range(lastIndex, len(tokens) - length + 1):
         if " ".join(tokens[j:j + length]) == name:
             locations_found[name] = j + length
             if length == 1:
@@ -216,7 +216,7 @@ def get_headline_entities(headline, merged_entities):
             if count > 0:
                 index_list = get_locations(name, tokens, locations_found)
                 headline = headline.replace(name, '')  # remove to avoid double counting
-                print(name, count, index_list)  # TODO remove after testing
+                print(name, '- Count:', count, '- Locations:', index_list)  # TODO remove after testing
                 entity.count += count
                 entity.headline = True
                 if entity.headline_locations:
@@ -241,6 +241,7 @@ def test():
     print('Merged Entities:')
     for e in merged_entities:
         print(e)
+    print('------------------------')
     highest_score_entities = select_high_score_entities(0.5, merged_entities, num_sentences)
     headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
     top_entities = highest_score_entities + headline_entities

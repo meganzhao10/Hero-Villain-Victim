@@ -1,1 +1,3 @@
-This is a list of errors we found in our entity recongnition function
+This is a list of errors we found while testing our entity recognition function
+-Antonio Conte recognized as two entities Antonio and Conte (https://www.bbc.com/sport/football/46062468)
+-Scott Walker recognized as two entities Scott and Walker. Obama not merged into Barack Obama because of ObamaCare (https://www.foxnews.com/politics/wisconsin-gov-scott-walker-calls-obama-the-biggest-liar-of-the-world)
