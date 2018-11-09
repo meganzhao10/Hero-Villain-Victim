@@ -222,10 +222,11 @@ def get_headline_entities(headline, merged_entities):
     tokens = word_tokenize(headline)
     for entity in merged_entities:
         for name in entity.name_forms:
-            count = headline.count(name)  # TODO can't just count, need to make name is not substring (e.g. South vs Southern)
-            if count > 0:
-                index_list = get_locations(name, tokens, locations_found)
-                headline = headline.replace(name, '')  # remove to avoid double counting
+            index_list = get_locations(name, tokens, locations_found)
+            if index_list:
+                count = len(index_list) // len(name.split())
+                for i in index_list:
+                    tokens[i] = ''  # replace to avoid double counting but maintain indeces
                 print(name, '- Count:', count, '- Locations:', index_list)  # TODO remove after testing
                 entity.count += count
                 entity.headline = True
