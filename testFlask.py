@@ -35,7 +35,7 @@ def getURL():
             top_entities_name[i] = top_entities[i].name
     return render_template('results.html', top_entities_name = top_entities_name)
 
-
+'''
 @app.route('/randomPoints/<number>/')
 def getRandomData(number):
     number = int(number)
@@ -54,6 +54,7 @@ def getRandomData(number):
 @app.route('/random/<number>')
 def random_points(number):
     return render_template('index.html', number = number)
+'''
 #
 #host = sys.argv[1]
 #port= sys.argv[2]
