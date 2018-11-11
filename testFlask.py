@@ -40,8 +40,11 @@ def getURL():
         
         top_entities = highest_score_entities + headline_entities
         
-    return jsonify({"top_entities": [entity.name for entity in top_entities]})
-
+    #return jsonify({"top_entities": [entity.name for entity in top_entities]})
+        top_entities_name = {}
+        for i in range(3):
+            top_entities_name[i] = top_entities[i].name
+    return render_template('results.html', top_entities_name = top_entities_name)
 
 
 @app.route('/randomPoints/<number>/')
