@@ -263,7 +263,7 @@ def extract_by_soup(url):
 
     return headline, articleList  # TODO modify output so article is string
 
-
+'''
 def test():
     url = input("Enter a website to extract the URL's from: ")
     headline, article = extract_by_newsplease(url)
@@ -284,3 +284,4 @@ def test():
 
 
 test()
+'''
