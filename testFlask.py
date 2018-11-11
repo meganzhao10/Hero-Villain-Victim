@@ -40,7 +40,8 @@ def getURL():
         
         top_entities = highest_score_entities + headline_entities
         
-    return jsonify({'h':headline,'article':article })
+    return jsonify({"top_entities": [entity.name for entity in top_entities]})
+
 
 
 @app.route('/randomPoints/<number>/')
