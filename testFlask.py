@@ -1,8 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 import entity_recognition
 import sys
-
-#import psycopg2
 import json
 app = Flask(__name__)
 
@@ -10,15 +8,6 @@ app = Flask(__name__)
 @app.route('/')
 def comps():
     return render_template('index.html')
-
-
-#@app.route('/results/', methods = ["POST", "GET"])
-#def test():
-#    name = ""
-#    normalized_name = ""
-#    top = entity_recognition.Entity(name, normalized_name, sentence_number=None, index_list=None, headline=False, headline_index_list=None)
-#    return render_template('index.html')
-
 
 @app.route('/getURL',methods = ["POST", "GET"])
 def getURL():
@@ -35,31 +24,6 @@ def getURL():
             top_entities_name[i] = top_entities[i].name
     return render_template('results.html', top_entities_name = top_entities_name)
 
-'''
-@app.route('/randomPoints/<number>/')
-def getRandomData(number):
-    number = int(number)
-    colors = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628']
-    data = []
-    for i in range(number):
-        point = {}
-        point['x'] = random.randint(1,400)
-        point['y'] = random.randint(1,400)
-        point['r'] = random.randint(5,10)
-        point['c'] = random.choice(colors)
-        data.append(point)
-    return jsonify({'data':data})
-
-
-@app.route('/random/<number>')
-def random_points(number):
-    return render_template('index.html', number = number)
-'''
-#
-#host = sys.argv[1]
-#port= sys.argv[2]
-#app.run(host=host, port=port)
-#
 
 if __name__=='__main__':
     app.run(debug=True)
