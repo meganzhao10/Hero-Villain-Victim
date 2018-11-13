@@ -1,10 +1,8 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request  # TODO remove jsonify if remains unused
 import entity_recognition
-import sys
 
-#import psycopg2
-import json
 app = Flask(__name__)
+
 
 # allow cross-origin resource sharing
 @app.after_request
@@ -14,21 +12,22 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
+
 @app.route('/')
 def comps():
     return render_template('index.html')
 
+
 @app.route('/newssite/')
 def top_entities():
     url = request.args.get("url")
-    top_entities = entity_recognition.get_top_three_entities(url)         
-    top_entities_name = []
-    for i in range(3):
-        top_entities_name.append(top_entities[i].name)
-    #return tuple(top_entities_name)
-    return "\n".join(top_entities_name)
-    #return render_template('results.html', top_entities_name = top_entities_name)
+    top_entities = entity_recognition.get_top_entities(url)
+    top_entity_names = [entity.name for entity in top_entities]
+    # return tuple(top_entities_name)
+    return "\n".join(top_entity_names)
+    # return render_template('results.html', top_entities_name = top_entities_name)
 
+# TODO remove old app routes used for testing
 '''
 @app.route('/randomPoints/<number>/')
 def getRandomData(number):
@@ -54,5 +53,5 @@ port= sys.argv[2]
 app.run(host=host, port=port)
 '''
 
-if __name__=='__main__':
+if __name__ == '__main__':
     app.run(debug=True)

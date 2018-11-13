@@ -3,7 +3,7 @@ Potential concerns and possible features to implement in the future
 -Exclude the location tag at the beginning of the article
 -Dealing with positions (the witness...)
 '''
-
+# TODO remove all print statements once done testing
 
 import codecs
 from nltk import (
@@ -217,7 +217,7 @@ def get_headline_entities(headline, merged_entities):
     '''
     Extracts the entities from the headline and updates merged_entities accordingly.
     '''
-    print("HEADLINE ENTITIES:")  # TODO remove after testing
+    # print("HEADLINE ENTITIES:")  # TODO remove after testing
     locations_found = {}
     tokens = word_tokenize(headline)
     for entity in merged_entities:
@@ -227,14 +227,14 @@ def get_headline_entities(headline, merged_entities):
                 count = len(index_list) // len(name.split())
                 for i in index_list:
                     tokens[i] = ''  # replace to avoid double counting but maintain indeces
-                print(name, '- Count:', count, '- Locations:', index_list)  # TODO remove after testing
+                # print(name, '- Count:', count, '- Locations:', index_list)  # TODO remove after testing
                 entity.count += count
                 entity.headline = True
                 if entity.headline_locations:
                     entity.headline_locations += index_list
                 else:
                     entity.headline_locations = index_list
-    print('---------------')  # TODO remove after testing
+    # print('---------------')  # TODO remove after testing
 
 
 def extract_by_newspaper(url):
@@ -264,7 +264,7 @@ def extract_by_soup(url):
     return headline, articleList  # TODO modify output so article is string
 
 
-def get_top_three_entities(url):
+def get_top_entities(url):
     # url = input("Enter a website to extract the URL's from: ")
     headline, article = extract_by_newsplease(url)
     # print('Headline: ', headline)
@@ -286,6 +286,3 @@ def get_top_three_entities(url):
         print(e)
     '''
     return top_entities
-
-
-
