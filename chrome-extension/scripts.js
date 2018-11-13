@@ -7,7 +7,7 @@ run = function(tabs) {
     $(document).ready(function() {
         $.get(localhost, {"url": url}, function(data){
             alert(data);
-        })
+        });
     });
 };
 
