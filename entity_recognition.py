@@ -10,16 +10,6 @@ from nltk import (
      ne_chunk, pos_tag, sent_tokenize, word_tokenize,
  )
 
-# pip3 install news-please
-# pip3 install newspaper3k
-from newsplease import NewsPlease
-from newspaper import Article
-
-# pip install beautifulsoup4
-# pip install lxml
-# pip install html5lib
-from bs4 import BeautifulSoup
-
 RECOGNIZED_TYPES = ["PERSON", "ORGANIZATION", "GPE", "POSITION"]
 
 NAME_PREFIXES = (
@@ -48,6 +38,7 @@ class Entity:
     headline_locations = []
     headline = False
     name_forms = []
+    role = ""
 
     def __init__(self, name, normalized_name, sentence_number=None, index_list=None, headline=False, headline_index_list=None):
         self.name = name
@@ -89,6 +80,8 @@ def get_locations(name, tokens, locations_found):
             break
     return index_list
 
+def extract_article(article):
+    return sent_tokenize(article)
 
 def extract_entities_article(article):
     '''
@@ -97,7 +90,7 @@ def extract_entities_article(article):
 
     Each entity is a tuple (entity name, sentence number, locations in sentence)
     '''
-    sentences = sent_tokenize(article)
+    sentences = extract_article(article) 
     named_entities = []
     num_sentences = len(sentences)
     for i in range(num_sentences):
@@ -122,7 +115,8 @@ def extract_entities_article(article):
 def merge_entities(temp_entities):
     '''
     Merges the list of temporary entity tuples into a list of Entity objects.
-    Basis of merging algorithm from Function from NU Infolab News Context Project (https://github.com/NUinfolab/context).
+    Basis of merging algorithm from Function from NU Infolab News Context Project
+    (https://github.com/NUinfolab/context).
     '''
     merged_entities = []
     for temp_entity in temp_entities:
@@ -237,36 +231,8 @@ def get_headline_entities(headline, merged_entities):
     # print('---------------')  # TODO remove after testing
 
 
-def extract_by_newspaper(url):
-    content = Article(url)
-    content.download()
-    content.parse()
-    headline = content.title
-    article = content.text
-    return headline, article
-
-
-def extract_by_newsplease(url):
-    content = NewsPlease.from_url(url)
-    headline = content.title
-    article = content.text
-    return headline, article
-
-
-def extract_by_soup(url):
-    content = BeautifulSoup(url, "lxml")
-    headline = content.title.string
-    articleList = list()
-    for i in content.find_all("p"):
-        articleList.append(i.get_text())
-        # print(i.get_text())
-
-    return headline, articleList  # TODO modify output so article is string
-
-
-def get_top_entities(url):
+def get_top_entities(headline, article):
     # url = input("Enter a website to extract the URL's from: ")
-    headline, article = extract_by_newsplease(url)
     # print('Headline: ', headline)
     temp_entities, num_sentences = extract_entities_article(article)
     merged_entities = merge_entities(temp_entities)
@@ -286,3 +252,5 @@ def get_top_entities(url):
         print(e)
     '''
     return top_entities
+
+
