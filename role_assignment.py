@@ -29,7 +29,18 @@ def word_similarity(word_1, word_2):
     except IndexError:
         return 0
 
-
+def similarity_sentiment(w1, w2):
+    
+    if sentiment(w1)>=0:  
+        if sentiment(w2)>=0:
+            return word_similarity(w1, w2)
+    else:
+        score = 1 - word_similarity(w1, w2)
+        return score
+       
+        
+    
+    
 def extract_by_newspaper(url):
     content = Article(url)
     content.download()
