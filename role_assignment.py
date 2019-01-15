@@ -12,6 +12,9 @@ from newspaper import Article
 # pip install html5lib
 from bs4 import BeautifulSoup
 
+HERO_DICT = ["brave", "strong"]
+VILLAIN_DICT = ["bad"]
+VICTIM_DICT = ["kidnapped"]
 
 def word_similarity(word_1, word_2):
     '''
@@ -52,25 +55,6 @@ def decay_function(decay_factor, entity_location, term_index):
         distance = min(distance, abs(term_index - entity_location[1]))
     return (1 - decay_factor) ** distance
 
-def role_score_by_sentence(entity, role, index, entity_location, article):
-    '''
-    Calculates the role score of the entity in the given sentence.
-    entity_location is a list where the elements are the beginning and ending indices
-    '''
-    total_score = 0
-    article = extract_article(article)
-    sentence = article[index]
-    begin_index = entity_location[0]
-    end_index = entity_location[1] if len(entity_location) > 1 else entity_location[0]
-    for i in range(len(sentence)):
-        cur_score = 0
-        if not begin_index <= i <= end_index:
-            #cur_score += similarity_to_score(sentence[i], role)
-            #cur_score += additional_score(entity, role, sentence[i])
-            cur_score *= decay_function(0.5, entity_location, i)
-        total_score += cur_score
-    return total_score
-
 def sentiment(word):
     '''
     Returns the sentiment of the given string as a float within
@@ -94,17 +78,38 @@ def choose_role(word):
 def similarity_to_role(word, role):
     similarity_total = 0
     if role == "hero":
-        dict_length = len(hero_dict)
-        for hero_term in hero_dict:
-            similarity_total += similarity(word, hero_term) / dict_length
+        dict_length = len(HERO_DICT)
+        for hero_term in HERO_DICT:
+            similarity_total += word_similarity(word, hero_term) / dict_length
     elif role == "villain":
-        dict_length = len(villain_dict)
-        for villain_term in villain_dict:
-            similarity_total += similarity(word, villain_term) / dict_length
+        dict_length = len(VILLAIN_DICT)
+        for villain_term in VILLAIN_DICT:
+            similarity_total += word_similarity(word, villain_term) / dict_length
     elif role == "victim":
-        dict_length = len(victim_dict)
-        for victim_term in victim_dict:
-            similarity_total += similarity(word, victim_term) / dict_length
+        dict_length = len(VICTIM_DICT)
+        for victim_term in VICTIM_DICT:
+            similarity_total += word_similarity(word, victim_term) / dict_length
+
+
+def role_score_by_sentence(entity, role, index, entity_location, article):
+    '''
+    Calculates the role score of the entity in the given sentence.
+    entity_location is a list where the elements are the beginning and ending indices
+    '''
+    total_score = 0
+    article = extract_article(article)
+    sentence = article[index]
+    begin_index = entity_location[0]
+    end_index = entity_location[1] if len(entity_location) > 1 else entity_location[0]
+    for i in range(len(sentence)):
+        cur_score = 0
+        if not begin_index <= i <= end_index:
+            cur_score += similarity_to_role(sentence[i], role)
+           # cur_score += additional_score(entity, role, sentence[i])
+            cur_score *= decay_function(0.5, entity_location, i)
+        total_score += cur_score
+    return total_score
+
 
 def entity_role_score(entity, role, article):
     '''
@@ -117,6 +122,7 @@ def entity_role_score(entity, role, article):
     for index in sentences:
         total_score += role_score_by_sentence(entity, role, index, sentences[index], article)
         count += 1
+    print(total_score)
     return total_score / count
 
 def main(url):
@@ -136,6 +142,7 @@ def main(url):
         if entity_role_score(entity, "victim", article) > score:
             role = "victim"
         entity.role = role
+        print(entity.role)
     return entities
 
 
