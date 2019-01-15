@@ -85,9 +85,9 @@ def choose_role(word):
     '''
     if sentiment(word) > 0:
         return "hero"
-    else if sentiment < 0:
+    else if sentiment(word) < 0:
         return "villain"
-    else if sentiment = 0:
+    else if sentiment(word) = 0:
         return "all"
 
 def similarity_to_role(word, role):
