@@ -1,5 +1,6 @@
 from nltk.corpus import wordnet as wn
 from entity_recognition import get_top_entities, extract_article
+# pip3 install textblob
 from textblob import TextBlob
 
 # pip3 install news-please
@@ -85,9 +86,9 @@ def choose_role(word):
     '''
     if sentiment(word) > 0:
         return "hero"
-    else if sentiment < 0:
+    elif sentiment < 0:
         return "villain"
-    else if sentiment = 0:
+    elif sentiment == 0:
         return "all"
 
 def similarity_to_role(word, role):
@@ -96,11 +97,11 @@ def similarity_to_role(word, role):
         dict_length = len(hero_dict)
         for hero_term in hero_dict:
             similarity_total += similarity(word, hero_term) / dict_length
-    else if role == "villain":
+    elif role == "villain":
         dict_length = len(villain_dict)
         for villain_term in villain_dict:
             similarity_total += similarity(word, villain_term) / dict_length
-    else if role == "victim":
+    elif role == "victim":
         dict_length = len(victim_dict)
         for victim_term in victim_dict:
             similarity_total += similarity(word, victim_term) / dict_length
