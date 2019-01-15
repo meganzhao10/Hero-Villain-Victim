@@ -1,5 +1,6 @@
 from nltk.corpus import wordnet as wn
 from entity_recognition import get_top_entities, extract_article
+from textblob import TextBlob
 
 # pip3 install news-please
 # pip3 install newspaper3k
@@ -19,7 +20,6 @@ def word_similarity(word_1, word_2):
     a = wn.synsets(word_1)[0]
     b = wn.synsets(word_2)[0]
     return a.wup_similarity(b)
-
 
 def extract_by_newspaper(url):
     content = Article(url)
@@ -45,13 +45,11 @@ def extract_by_soup(url):
 
     return headline, articleList  # TODO modify output so article is string
 
-
 def decay_function(decay_factor, entity_location, term_index):
     distance = abs(term_index - entity_location[0])
     if len(entity_location) > 1:
         distance = min(distance, abs(term_index - entity_location[1]))
     return (1 - decay_factor) ** distance
-
 
 def role_score_by_sentence(entity, role, index, entity_location, article):
     '''
@@ -71,11 +69,45 @@ def role_score_by_sentence(entity, role, index, entity_location, article):
             cur_score *= decay_function(0.5, entity_location, i)
         total_score += cur_score
     return total_score
-    
-        
+
+def sentiment(word):
+    '''
+    Returns the sentiment of the given string as a float within
+    the range [-1.0, 1.0]
+    '''
+    word_blob = TextBlob(word)
+    return word_blob.sentiment.polarity
+
+def choose_role(word):
+    '''
+    Uses the sentiment score of a term to determine which dictionary is likely
+    to be most useful.
+    '''
+    if sentiment(word) > 0:
+        return "hero"
+    else if sentiment < 0:
+        return "villain"
+    else if sentiment = 0:
+        return "all"
+
+def similarity_to_role(word, role):
+    similarity_total = 0
+    if role == "hero":
+        dict_length = len(hero_dict)
+        for hero_term in hero_dict:
+            similarity_total += similarity(word, hero_term) / dict_length
+    else if role == "villain":
+        dict_length = len(villain_dict)
+        for villain_term in villain_dict:
+            similarity_total += similarity(word, villain_term) / dict_length
+    else if role == "victim":
+        dict_length = len(victim_dict)
+        for victim_term in victim_dict:
+            similarity_total += similarity(word, victim_term) / dict_length
+
 def entity_role_score(entity, role, article):
     '''
-    Calculates the role score of the entity by averaging the 
+    Calculates the role score of the entity by averaging the
     role scores of the sentences where the entity appears.
     '''
     sentences = entity.locations
@@ -86,14 +118,13 @@ def entity_role_score(entity, role, article):
         count += 1
     return total_score / count
 
-
 def main(url):
     '''
     Retrieve the three top entities from entity_recognition.py;
     assign each entity a role
     '''
     headline, article = extract_by_newsplease(url)
-    entities = get_top_entities(headline, article)    
+    entities = get_top_entities(headline, article)
     for entity in entities:
         role = "hero"
         score  = entity_role_score(entity, "hero", article)
@@ -105,6 +136,6 @@ def main(url):
             role = "victim"
         entity.role = role
     return entities
-    
 
-main("https://www.npr.org/2019/01/13/684645947/los-angeles-teachers-are-moving-forward-with-a-strike")    
+
+main("https://www.npr.org/2019/01/13/684645947/los-angeles-teachers-are-moving-forward-with-a-strike")
