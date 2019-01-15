@@ -16,14 +16,18 @@ HERO_DICT = ["brave", "strong"]
 VILLAIN_DICT = ["bad"]
 VICTIM_DICT = ["kidnapped"]
 
+
 def word_similarity(word_1, word_2):
     '''
     Returns the Wu-Palmer similarity between the given words.
     Values range between 0 (least similar) and 1 (most similar).
     '''
-    a = wn.synsets(word_1)[0]
-    b = wn.synsets(word_2)[0]
-    return a.wup_similarity(b)
+    try:
+        a = wn.synsets(word_1)[0]
+        b = wn.synsets(word_2)[0]
+        return a.wup_similarity(b)
+    except IndexError:
+        return 0
 
 
 def extract_by_newspaper(url):
@@ -97,6 +101,7 @@ def similarity_to_role(word, role):
         dict_length = len(VICTIM_DICT)
         for victim_term in VICTIM_DICT:
             similarity_total += word_similarity(word, victim_term) / dict_length
+    return similarity_total  # TODO I(Quinn) added this to avoid an error (there was not return before), not sure if correct return val
 
 
 def role_score_by_sentence(entity, role, index, entity_location, article):
@@ -113,11 +118,10 @@ def role_score_by_sentence(entity, role, index, entity_location, article):
         cur_score = 0
         if not begin_index <= i <= end_index:
             cur_score += similarity_to_role(sentence[i], role)
-           # cur_score += additional_score(entity, role, sentence[i])
+            # cur_score += additional_score(entity, role, sentence[i])
             cur_score *= decay_function(0.5, entity_location, i)
         total_score += cur_score
     return total_score
-
 
 
 def entity_role_score(entity, role, article):
@@ -156,4 +160,5 @@ def main(url):
     return entities
 
 
-main("https://www.npr.org/2019/01/13/684645947/los-angeles-teachers-are-moving-forward-with-a-strike")
+if __name__ == "__main__":
+    main("https://www.npr.org/2019/01/13/684645947/los-angeles-teachers-are-moving-forward-with-a-strike")
