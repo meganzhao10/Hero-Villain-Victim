@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 import entity_recognition
+import role_assignment
 
 app = Flask(__name__)
 
@@ -16,7 +17,8 @@ def after_request(response):
 @app.route('/')
 def top_entities():
     url = request.args.get("url")
-    top_entities = entity_recognition.get_top_entities(url)
+    headline, article = role_assignment.extract_by_newsplease(url)
+    top_entities = entity_recognition.get_top_entities(headline, article)
     top_entity_names = [entity.name for entity in top_entities]
     print(top_entity_names)
     # return tuple(top_entities_name)

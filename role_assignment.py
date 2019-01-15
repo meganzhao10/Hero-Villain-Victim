@@ -21,6 +21,7 @@ def word_similarity(word_1, word_2):
     b = wn.synsets(word_2)[0]
     return a.wup_similarity(b)
 
+
 def extract_by_newspaper(url):
     content = Article(url)
     content.download()
@@ -29,11 +30,13 @@ def extract_by_newspaper(url):
     article = content.text
     return headline, article
 
+
 def extract_by_newsplease(url):
     content = NewsPlease.from_url(url)
     headline = content.title
     article = content.text
     return headline, article
+
 
 def extract_by_soup(url):
     content = BeautifulSoup(url, "lxml")
@@ -45,11 +48,13 @@ def extract_by_soup(url):
 
     return headline, articleList  # TODO modify output so article is string
 
+
 def decay_function(decay_factor, entity_location, term_index):
     distance = abs(term_index - entity_location[0])
     if len(entity_location) > 1:
         distance = min(distance, abs(term_index - entity_location[1]))
     return (1 - decay_factor) ** distance
+
 
 def role_score_by_sentence(entity, role, index, entity_location, article):
     '''
@@ -64,11 +69,12 @@ def role_score_by_sentence(entity, role, index, entity_location, article):
     for i in range(len(sentence)):
         cur_score = 0
         if not begin_index <= i <= end_index:
-            #cur_score += similarity_to_score(sentence[i], role)
-            #cur_score += additional_score(entity, role, sentence[i])
+            # cur_score += similarity_to_score(sentence[i], role)
+            # cur_score += additional_score(entity, role, sentence[i])
             cur_score *= decay_function(0.5, entity_location, i)
         total_score += cur_score
     return total_score
+
 
 def sentiment(word):
     '''
@@ -78,17 +84,20 @@ def sentiment(word):
     word_blob = TextBlob(word)
     return word_blob.sentiment.polarity
 
+
 def choose_role(word):
     '''
     Uses the sentiment score of a term to determine which dictionary is likely
     to be most useful.
     '''
-    if sentiment(word) > 0:
+    s = sentiment(word)
+    if s > 0:
         return "hero"
-    else if sentiment < 0:
+    elif s < 0:
         return "villain"
-    else if sentiment = 0:
+    else:
         return "all"
+
 
 def similarity_to_role(word, role):
     similarity_total = 0
@@ -96,14 +105,15 @@ def similarity_to_role(word, role):
         dict_length = len(hero_dict)
         for hero_term in hero_dict:
             similarity_total += similarity(word, hero_term) / dict_length
-    else if role == "villain":
+    elif role == "villain":
         dict_length = len(villain_dict)
         for villain_term in villain_dict:
             similarity_total += similarity(word, villain_term) / dict_length
-    else if role == "victim":
+    elif role == "victim":
         dict_length = len(victim_dict)
         for victim_term in victim_dict:
             similarity_total += similarity(word, victim_term) / dict_length
+
 
 def entity_role_score(entity, role, article):
     '''
@@ -118,6 +128,7 @@ def entity_role_score(entity, role, article):
         count += 1
     return total_score / count
 
+
 def main(url):
     '''
     Retrieve the three top entities from entity_recognition.py;
@@ -127,7 +138,7 @@ def main(url):
     entities = get_top_entities(headline, article)
     for entity in entities:
         role = "hero"
-        score  = entity_role_score(entity, "hero", article)
+        score = entity_role_score(entity, "hero", article)
         cur = entity_role_score(entity, "villain", article)
         if cur > score:
             score = cur
