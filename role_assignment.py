@@ -12,35 +12,12 @@ from newspaper import Article
 # pip install html5lib
 from bs4 import BeautifulSoup
 
-HERO_DICT = ["brave", "strong"]
-VILLAIN_DICT = ["bad"]
-VICTIM_DICT = ["kidnapped"]
+HERO_DICT = [ "strong", "brave"]
+VILLAIN_DICT = ["bad", "evil"]
+VICTIM_DICT = ["bullied", "kidnapped"]
 
 
-def word_similarity(word_1, word_2):
-    '''
-    Returns the Wu-Palmer similarity between the given words.
-    Values range between 0 (least similar) and 1 (most similar).
-    '''
-    try:
-        a = wn.synsets(word_1)[0]
-        b = wn.synsets(word_2)[0]
-        return a.wup_similarity(b)
-    except IndexError:
-        return 0
 
-def similarity_sentiment(w1, w2):
-    
-    if sentiment(w1)>=0:  
-        if sentiment(w2)>=0:
-            return word_similarity(w1, w2)
-    else:
-        score = 1 - word_similarity(w1, w2)
-        return score
-       
-        
-    
-    
 def extract_by_newspaper(url):
     content = Article(url)
     content.download()
@@ -49,13 +26,11 @@ def extract_by_newspaper(url):
     article = content.text
     return headline, article
 
-
 def extract_by_newsplease(url):
     content = NewsPlease.from_url(url)
     headline = content.title
     article = content.text
     return headline, article
-
 
 def extract_by_soup(url):
     content = BeautifulSoup(url, "lxml")
@@ -66,6 +41,20 @@ def extract_by_soup(url):
         # print(i.get_text())
 
     return headline, articleList  # TODO modify output so article is string
+
+def word_similarity(word_1, word_2):
+    '''
+    Returns the Wu-Palmer similarity between the given words.
+    Values range between 0 (least similar) and 1 (most similar).
+    '''
+    print(word_1, word_2)
+    try:
+        a = wn.synsets(word_1)[0]
+        b = wn.synsets(word_2)[0]
+        print(a.wup_similarity(b))
+        return a.wup_similarity(b)
+    except IndexError:
+        return 0
 
 
 def decay_function(decay_factor, entity_location, term_index):
@@ -112,8 +101,7 @@ def similarity_to_role(word, role):
         dict_length = len(VICTIM_DICT)
         for victim_term in VICTIM_DICT:
             similarity_total += word_similarity(word, victim_term) / dict_length
-    return similarity_total  # TODO I(Quinn) added this to avoid an error (there was not return before), not sure if correct return val
-
+    return similarity_total 
 
 def role_score_by_sentence(entity, role, index, entity_location, article):
     '''
@@ -121,6 +109,7 @@ def role_score_by_sentence(entity, role, index, entity_location, article):
     entity_location is a list where the elements are the beginning and ending indices
     '''
     total_score = 0
+    # article from a string to a list of sentences
     article = extract_article(article)
     sentence = article[index]
     begin_index = entity_location[0]
@@ -128,9 +117,11 @@ def role_score_by_sentence(entity, role, index, entity_location, article):
     for i in range(len(sentence)):
         cur_score = 0
         if not begin_index <= i <= end_index:
-            cur_score += similarity_to_role(sentence[i], role)
-            # cur_score += additional_score(entity, role, sentence[i])
-            cur_score *= decay_function(0.5, entity_location, i)
+            term_role = choose_role(sentence[i]) 
+            if term_role == role or term_role == "all":  
+                cur_score += similarity_to_role(sentence[i], role)
+                # cur_score += additional_score(entity, role, sentence[i])
+                cur_score *= decay_function(0.5, entity_location, i)
         total_score += cur_score
     return total_score
 
@@ -153,10 +144,11 @@ def entity_role_score(entity, role, article):
 def main(url):
     '''
     Retrieve the three top entities from entity_recognition.py;
-    assign each entity a role
+    assign each entity the role with the highest role score.
     '''
     headline, article = extract_by_newsplease(url)
     entities = get_top_entities(headline, article)
+    print(entities)
     for entity in entities:
         role = "hero"
         score = entity_role_score(entity, "hero", article)
@@ -172,4 +164,4 @@ def main(url):
 
 
 if __name__ == "__main__":
-    main("https://www.npr.org/2019/01/13/684645947/los-angeles-teachers-are-moving-forward-with-a-strike")
+    main("http://www.cnn.com/2019/01/16/opinions/bryan-cranston-wrong-actor-choice-upside-blake/index.html")
