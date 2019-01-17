@@ -12,10 +12,9 @@ from newspaper import Article
 # pip install html5lib
 from bs4 import BeautifulSoup
 
-HERO_DICT = [ "strong", "brave"]
+HERO_DICT = ["strong", "brave"]
 VILLAIN_DICT = ["bad", "evil"]
 VICTIM_DICT = ["bullied", "kidnapped"]
-
 
 
 def extract_by_newspaper(url):
@@ -26,11 +25,13 @@ def extract_by_newspaper(url):
     article = content.text
     return headline, article
 
+
 def extract_by_newsplease(url):
     content = NewsPlease.from_url(url)
     headline = content.title
     article = content.text
     return headline, article
+
 
 def extract_by_soup(url):
     content = BeautifulSoup(url, "lxml")
@@ -42,18 +43,22 @@ def extract_by_soup(url):
 
     return headline, articleList  # TODO modify output so article is string
 
+
 def word_similarity(word_1, word_2):
     '''
     Returns the Wu-Palmer similarity between the given words.
     Values range between 0 (least similar) and 1 (most similar).
     '''
-    print(word_1, word_2)
     try:
         a = wn.synsets(word_1)[0]
         b = wn.synsets(word_2)[0]
-        print(a.wup_similarity(b))
-        return a.wup_similarity(b)
     except IndexError:
+        return 0
+
+    sim = a.wup_similarity(b)
+    if sim:
+        return sim
+    else:
         return 0
 
 
@@ -101,7 +106,8 @@ def similarity_to_role(word, role):
         dict_length = len(VICTIM_DICT)
         for victim_term in VICTIM_DICT:
             similarity_total += word_similarity(word, victim_term) / dict_length
-    return similarity_total 
+    return similarity_total
+
 
 def role_score_by_sentence(entity, role, index, entity_location, article):
     '''
@@ -117,8 +123,8 @@ def role_score_by_sentence(entity, role, index, entity_location, article):
     for i in range(len(sentence)):
         cur_score = 0
         if not begin_index <= i <= end_index:
-            term_role = choose_role(sentence[i]) 
-            if term_role == role or term_role == "all":  
+            term_role = choose_role(sentence[i])
+            if term_role == role or term_role == "all":
                 cur_score += similarity_to_role(sentence[i], role)
                 # cur_score += additional_score(entity, role, sentence[i])
                 cur_score *= decay_function(0.5, entity_location, i)

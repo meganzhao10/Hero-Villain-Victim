@@ -80,8 +80,10 @@ def get_locations(name, tokens, locations_found):
             break
     return index_list
 
+
 def extract_article(article):
     return sent_tokenize(article)
+
 
 def extract_entities_article(article):
     '''
@@ -90,7 +92,7 @@ def extract_entities_article(article):
 
     Each entity is a tuple (entity name, sentence number, locations in sentence)
     '''
-    sentences = extract_article(article) 
+    sentences = extract_article(article)
     named_entities = []
     num_sentences = len(sentences)
     for i in range(num_sentences):
@@ -252,5 +254,3 @@ def get_top_entities(headline, article):
         print(e)
     '''
     return top_entities
-
-
