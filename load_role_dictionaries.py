@@ -14,9 +14,9 @@ with open('Role dictionaries - Sheet6.csv') as csv_file:
     reader = csv.reader(csv_file)
     for i, row in enumerate(reader):
         if i != 0:
-            hero.add(row[1])
-            villain.add(row[4])
-            victim.add(row[7])
+            hero.add(row[1].lower())
+            villain.add(row[4].lower())
+            victim.add(row[7].lower())
 
 hero.discard('')
 villain.discard('')
