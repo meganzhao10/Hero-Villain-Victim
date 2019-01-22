@@ -1,0 +1,49 @@
+/* Height and width of popup window */
+html {
+  height: 250px;
+  width: 400px;
+}
+
+
+/* The title bar */
+#title {
+  position: fixed;
+  top: 0px;
+  right: 0px;
+  left: 0px;
+
+  height: 40px;
+  background-color: DimGrey;
+  color: White;
+  line-height: 10px;
+  padding-left: 20px;
+}
+
+
+.column {
+  margin-top: 50px;
+  float: left;
+  width: 33.33%;
+  text-align: center;
+}
+
+.circle {
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.circle#hero{
+  background-color: Green;
+}
+
+.circle#villain{
+  background-color: Crimson;
+}
+
+.circle#victim{
+  background-color: BlueViolet;
+}
