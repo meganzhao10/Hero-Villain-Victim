@@ -6,14 +6,12 @@ run = function(tabs) {
     url = tabs[0].url;
 
     // Hide everything except loading message (and title)
+    document.getElementById("close").onclick = function(){window.close();};
     $('div:not(#loading)').hide();
     $('div#titleDiv').show();
 
     $(document).ready(function() {
         $.get(localhost, {"url": url}, function(data){
-
-            document.getElementById("close").onclick = function(){window.close()};
-
             // Set hero, villain, victim elements
             document.getElementById("heroDiv").querySelectorAll("#hero")[0].innerHTML = data[0];
             document.getElementById("villainDiv").querySelectorAll("#villain")[0].innerHTML = data[1];
