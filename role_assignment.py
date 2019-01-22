@@ -1,8 +1,9 @@
 from nltk.corpus import wordnet as wn
 from entity_recognition import get_top_entities, extract_article
+from role_dictionaries import *
+
 # pip3 install textblob
 from textblob import TextBlob
-
 # pip3 install news-please
 # pip3 install newspaper3k
 from newsplease import NewsPlease
@@ -11,11 +12,6 @@ from newspaper import Article
 # pip install lxml
 # pip install html5lib
 from bs4 import BeautifulSoup
-
-HERO_DICT = ["strong", "brave"]
-VILLAIN_DICT = ["bad", "evil"]
-VICTIM_DICT = ["bullied", "kidnapped"]
-
 
 def extract_by_newspaper(url):
     content = Article(url)
@@ -49,18 +45,15 @@ def word_similarity(word_1, word_2):
     Returns the Wu-Palmer similarity between the given words.
     Values range between 0 (least similar) and 1 (most similar).
     '''
-    try:
-        a = wn.synsets(word_1)[0]
-        b = wn.synsets(word_2)[0]
-    except IndexError:
-        return 0
-
-    sim = a.wup_similarity(b)
-    if sim:
-        return sim
-    else:
-        return 0
-
+    syns_w1 = wn.synsets(word_1)
+    syns_w2 = wn.synsets(word_2)
+    score = 0
+    for w1 in syns_w1:
+        for w2 in syns_w2:
+            cur_score = w1.wup_similarity(w2)
+            if cur_score:
+                score = max(score, cur_score)
+    return score
 
 def decay_function(decay_factor, entity_location, term_index):
     distance = abs(term_index - entity_location[0])
@@ -143,7 +136,7 @@ def entity_role_score(entity, role, article):
     for index in sentences:
         total_score += role_score_by_sentence(entity, role, index, sentences[index], article)
         count += 1
-    print(total_score)
+    print(role + ": " + str(total_score))
     return total_score / count
 
 
@@ -154,7 +147,6 @@ def main(url):
     '''
     headline, article = extract_by_newsplease(url)
     entities = get_top_entities(headline, article)
-    print(entities)
     for entity in entities:
         role = "hero"
         score = entity_role_score(entity, "hero", article)
@@ -165,6 +157,7 @@ def main(url):
         if entity_role_score(entity, "victim", article) > score:
             role = "victim"
         entity.role = role
+        print(entity)
         print(entity.role)
     return entities
 
