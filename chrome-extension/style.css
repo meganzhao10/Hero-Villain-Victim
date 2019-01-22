@@ -4,19 +4,28 @@ html {
   width: 400px;
 }
 
-
 /* The title bar */
-#title {
+#titleDiv {
   position: fixed;
   top: 0px;
   right: 0px;
   left: 0px;
-
   height: 40px;
   background-color: DimGrey;
   color: White;
+}
+
+#title {
   line-height: 10px;
   padding-left: 20px;
+  display: inline-block;
+}
+
+#close{
+  border: none;
+  float: right;
+  background-color: inherit;
+  color: inherit;
 }
 
 
