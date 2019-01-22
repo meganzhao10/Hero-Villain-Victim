@@ -1,6 +1,6 @@
 /* Height and width of popup window */
 html {
-  height: 250px;
+  height: 225px;
   width: 400px;
 }
 
@@ -23,10 +23,11 @@ html {
 /* Loading message */
 #loading {
   text-align: center;
-  line-height: 225px;
+  line-height: 200px;
   font-size: 25px;
 }
 
+/* Split window into three columns */
 .column {
   margin-top: 50px;
   float: left;
@@ -34,22 +35,33 @@ html {
   text-align: center;
 }
 
+.role {
+  font-weight: bolder;
+}
+
 .circle {
   height: 50px;
   width: 50px;
   border-radius: 50%;
   display: inline-block;
-  text-align: center;
+  color: White;
+  font-size: 11px;
+  line-height: 25px;
 }
 
-.circle#heroCircle{
+.circle#heroCircle {
   background-color: Green;
 }
 
-.circle#villainCircle{
+.circle#villainCircle {
   background-color: Crimson;
 }
 
-.circle#victimCircle{
+.circle#victimCircle {
   background-color: BlueViolet;
+}
+
+ol {
+  list-style-position: inside;
+  padding-left: 0;
 }
