@@ -20,6 +20,13 @@ html {
 }
 
 
+/* Loading message */
+#loading {
+  text-align: center;
+  line-height: 225px;
+  font-size: 25px;
+}
+
 .column {
   margin-top: 50px;
   float: left;
@@ -33,7 +40,6 @@ html {
   border-radius: 50%;
   display: inline-block;
   text-align: center;
-  vertical-align: middle;
 }
 
 .circle#heroCircle{
