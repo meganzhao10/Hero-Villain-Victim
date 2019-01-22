@@ -36,14 +36,14 @@ html {
   vertical-align: middle;
 }
 
-.circle#hero{
+.circle#heroCircle{
   background-color: Green;
 }
 
-.circle#villain{
+.circle#villainCircle{
   background-color: Crimson;
 }
 
-.circle#victim{
+.circle#victimCircle{
   background-color: BlueViolet;
 }
