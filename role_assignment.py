@@ -1,3 +1,4 @@
+from nltk import word_tokenize
 from nltk.corpus import wordnet as wn
 from entity_recognition import get_top_entities, extract_article
 from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
@@ -111,7 +112,6 @@ def skip_word(word):
     '''
     Returns true if the given word should be ignored in analysis.
     '''
-    print(word, len(word))
     if len(word) < 2 or word.lower() in STOP_WORDS:
         return True
     return False
@@ -125,7 +125,7 @@ def role_score_by_sentence(entity, role, index, entity_location, article):
     total_score = 0
     # article from a string to a list of sentences
     article = extract_article(article)
-    sentence = article[index]
+    sentence = word_tokenize(article[index])
     begin_index = entity_location[0]
     end_index = entity_location[1] if len(entity_location) > 1 else entity_location[0]
     for i in range(len(sentence)):
@@ -165,6 +165,7 @@ def main(url):
     headline, article = extract_by_newsplease(url)
     entities = get_top_entities(headline, article)
     for entity in entities:
+        # TODO calculate headline score ??
         role = "hero"
         score = entity_role_score(entity, "hero", article)
         cur = entity_role_score(entity, "villain", article)
