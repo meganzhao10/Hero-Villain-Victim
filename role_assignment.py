@@ -177,6 +177,7 @@ def main(url):
         entity.role = role
         print(entity)
         print(entity.role)
+        # TODO assign threshold ???
     return entities
 
 
