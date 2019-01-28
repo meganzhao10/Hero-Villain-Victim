@@ -1,6 +1,7 @@
 from nltk.corpus import wordnet as wn
 from entity_recognition import get_top_entities, extract_article
-from role_dictionaries import *
+from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
+from stop_words import STOP_WORDS
 
 # pip3 install textblob
 from textblob import TextBlob
@@ -12,6 +13,9 @@ from newspaper import Article
 # pip install lxml
 # pip install html5lib
 from bs4 import BeautifulSoup
+
+
+# TODO Do we need to make words lowercase at any point in analysis???
 
 def extract_by_newspaper(url):
     content = Article(url)
@@ -55,6 +59,7 @@ def word_similarity(word_1, word_2):
                 score = max(score, cur_score)
     return score
 
+
 def decay_function(decay_factor, entity_location, term_index):
     distance = abs(term_index - entity_location[0])
     if len(entity_location) > 1:
@@ -77,10 +82,10 @@ def choose_role(word):
     to be most useful.
     '''
     s = sentiment(word)
-    if s > 0:
+    if s > 0:  # TODO update value to expand neutral range
         return "hero"
     elif s < 0:
-        return "villain"
+        return "villain"  # TODO include victim somewhere
     else:
         return "all"
 
@@ -102,6 +107,16 @@ def similarity_to_role(word, role):
     return similarity_total
 
 
+def skip_word(word):
+    '''
+    Returns true if the given word should be ignored in analysis.
+    '''
+    print(word, len(word))
+    if len(word) < 2 or word.lower() in STOP_WORDS:
+        return True
+    return False
+
+
 def role_score_by_sentence(entity, role, index, entity_location, article):
     '''
     Calculates the role score of the entity in the given sentence.
@@ -116,11 +131,13 @@ def role_score_by_sentence(entity, role, index, entity_location, article):
     for i in range(len(sentence)):
         cur_score = 0
         if not begin_index <= i <= end_index:
-            term_role = choose_role(sentence[i])
-            if term_role == role or term_role == "all":
-                cur_score += similarity_to_role(sentence[i], role)
-                # cur_score += additional_score(entity, role, sentence[i])
-                cur_score *= decay_function(0.5, entity_location, i)
+            word = sentence[i]
+            if not skip_word(word):
+                term_role = choose_role(word)
+                if term_role == role or term_role == "all":
+                    cur_score += similarity_to_role(word, role)
+                    # cur_score += additional_score(entity, role, sentence[i])
+                    cur_score *= decay_function(0.5, entity_location, i)
         total_score += cur_score
     return total_score
 
