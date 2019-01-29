@@ -6,9 +6,7 @@ Potential concerns and possible features to implement in the future
 # TODO remove all print statements once done testing
 
 import codecs
-from nltk import (
-     ne_chunk, pos_tag, sent_tokenize, word_tokenize,
- )
+from nltk import ne_chunk, pos_tag, word_tokenize
 
 RECOGNIZED_TYPES = ["PERSON", "ORGANIZATION", "GPE", "POSITION"]
 
@@ -81,25 +79,20 @@ def get_locations(name, tokens, locations_found):
     return index_list
 
 
-def extract_article(article):
-    return sent_tokenize(article)
-
-
-def extract_entities_article(article):
+def extract_entities_article(tokenized_article):
     '''
     Returns a tuple where the first item is a list of (unmerged) entities from
     the article and the second item is the number of sentences in the article.
 
     Each entity is a tuple (entity name, sentence number, locations in sentence)
     '''
-    sentences = extract_article(article)
     named_entities = []
-    num_sentences = len(sentences)
+    num_sentences = len(tokenized_article)
     for i in range(num_sentences):
-        sentence = sentences[i]
+        sentence = tokenized_article[i]
         tokens = word_tokenize(sentence)
-        tagged_sentences = pos_tag(tokens)
-        chunked_entities = ne_chunk(tagged_sentences)
+        tagged_sentence = pos_tag(tokens)
+        chunked_entities = ne_chunk(tagged_sentence)
 
         locations_found = {}
         for tree in chunked_entities:
@@ -233,10 +226,10 @@ def get_headline_entities(headline, merged_entities):
     # print('---------------')  # TODO remove after testing
 
 
-def get_top_entities(headline, article):
+def get_top_entities(headline, tokenized_article):
     # url = input("Enter a website to extract the URL's from: ")
     # print('Headline: ', headline)
-    temp_entities, num_sentences = extract_entities_article(article)
+    temp_entities, num_sentences = extract_entities_article(tokenized_article)
     merged_entities = merge_entities(temp_entities)
     get_headline_entities(headline, merged_entities)
     '''
