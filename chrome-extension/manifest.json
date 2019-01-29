@@ -1,13 +1,13 @@
 {
   "manifest_version": 2,
 
-  "name": "Top Entities:",
-  "description": "This extension runs Python code.",
+  "name": "Role Detection:",
+  "description": "Detects the roles of entities in a news article.",
   "version": "1.0",
 
   "browser_action": {
     "default_icon": "icon.png",
-    "default_popup": "chrome_index.html"
+    "default_popup": "popup.html"
   },
   "permissions": [
     "activeTab",

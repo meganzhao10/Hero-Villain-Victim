@@ -147,18 +147,45 @@ def main(url):
     '''
     headline, article = extract_by_newsplease(url)
     entities = get_top_entities(headline, article)
+    scores = {}
+    assignments = {}
+    '''
+    scores[("bob", "hero")] = 0.4
+    scores[("bob", "villain")] = 0.5
+    scores[("bob", "victim")] = 0.2
+
+    scores[("ds", "villain")] = 0.9
+    scores[("ds", "hero")] = 0.8
+    scores[("ds", "victim")] = 0.7
+    
+    scores[("ALICE", "villain")] = 0.89
+    scores[("ALICE", "hero")] = 0.5
+    scores[("ALICE", "victim")] = 0.7
+    #DS:VILLAIN; ALICE: VICTIM; BOB: HERO
+    '''
+    # Calculate all three scores for each entity and add to dictionary scores
     for entity in entities:
-        role = "hero"
-        score = entity_role_score(entity, "hero", article)
-        cur = entity_role_score(entity, "villain", article)
-        if cur > score:
-            score = cur
-            role = "villain"
-        if entity_role_score(entity, "victim", article) > score:
-            role = "victim"
-        entity.role = role
-        print(entity)
-        print(entity.role)
+        hero_score = entity_role_score(entity, "hero", article)
+        villain_score = entity_role_score(entity, "villain", article)
+        victim_score = entity_role_score(entity, "victim", article)
+        scores[(entity, "hero")] = hero_score
+        scores[(entity, "villain")] = villain_score
+        scores[(entity, "victim")] = victim_score
+
+    # Sort scores in descending order and assign roles
+    sorted_scores = sorted(scores, key = scores.get, reverse = True)
+    for w in sorted_scores:
+        if w in scores:
+            role_to_assign = w[1]
+            entity_to_assign = w[0]
+            assignments[role_to_assign] = (entity_to_assign, scores[w])
+            for entity, role in list(scores):
+                if (role == role_to_assign or entity == entity_to_assign) and \
+                        (entity, role) in scores:
+                    del scores[(entity, role)]             
+    for role in assignments:
+        print(role + ": " +  assignments[role][0].name + " " + str(assignments[role][1]))
+
     return entities
 
 

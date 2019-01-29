@@ -1,0 +1,76 @@
+/* Height and width of popup window */
+html {
+  height: 225px;
+  width: 400px;
+}
+
+/* The title bar */
+#titleDiv {
+  position: fixed;
+  top: 0px;
+  right: 0px;
+  left: 0px;
+  height: 40px;
+  background-color: DimGrey;
+  color: White;
+}
+
+#title {
+  line-height: 10px;
+  padding-left: 20px;
+  display: inline-block;
+}
+
+#close{
+  border: none;
+  float: right;
+  background-color: inherit;
+  color: inherit;
+}
+
+
+/* Loading message */
+#loading {
+  text-align: center;
+  line-height: 200px;
+  font-size: 25px;
+}
+
+/* Split window into three columns */
+.column {
+  margin-top: 50px;
+  float: left;
+  width: 33.33%;
+  text-align: center;
+}
+
+.role {
+  font-weight: bolder;
+}
+
+.circle {
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+  display: inline-block;
+  color: White;
+  font-size: 11px;
+  line-height: 25px;
+}
+
+.circle#heroCircle {
+  background-color: Green;
+}
+
+.circle#villainCircle {
+  background-color: Crimson;
+}
+
+.circle#victimCircle {
+  background-color: BlueViolet;
+}
+
+ol {
+  list-style-position: inside;
+  padding-left: 0;
+}
