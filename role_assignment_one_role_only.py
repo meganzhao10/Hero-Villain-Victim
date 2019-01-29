@@ -4,15 +4,24 @@ from role_dictionaries import *
 
 # pip3 install textblob
 from textblob import TextBlob
+
 # pip3 install news-please
 # pip3 install newspaper3k
 from newsplease import NewsPlease
-from newspaper import Article
+#from newspaper import Article
+
 # pip install beautifulsoup4
 # pip install lxml
 # pip install html5lib
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 
+def extract_by_newsplease(url):
+    content = NewsPlease.from_url(url)
+    headline = content.title
+    article = content.text
+    return headline, article
+
+'''
 def extract_by_newspaper(url):
     content = Article(url)
     content.download()
@@ -21,14 +30,6 @@ def extract_by_newspaper(url):
     article = content.text
     return headline, article
 
-
-def extract_by_newsplease(url):
-    content = NewsPlease.from_url(url)
-    headline = content.title
-    article = content.text
-    return headline, article
-
-
 def extract_by_soup(url):
     content = BeautifulSoup(url, "lxml")
     headline = content.title.string
@@ -36,9 +37,8 @@ def extract_by_soup(url):
     for i in content.find_all("p"):
         articleList.append(i.get_text())
         # print(i.get_text())
-
     return headline, articleList  # TODO modify output so article is string
-
+'''
 
 def word_similarity(word_1, word_2):
     '''
@@ -185,9 +185,8 @@ def main(url):
                     del scores[(entity, role)]             
     for role in assignments:
         print(role + ": " +  assignments[role][0].name + " " + str(assignments[role][1]))
-
     return entities
 
 
 if __name__ == "__main__":
-    main("https://www.npr.org/2019/01/20/687000735/winter-storm-grounds-flights-delays-trains-and-knocks-out-power")
+    main("https://www.npr.org/2019/01/29/689581417/apple-disables-group-facetime-after-security-flaw-let-callers-secretly-eavesdrop")
