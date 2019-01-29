@@ -4,15 +4,24 @@ from role_dictionaries import *
 
 # pip3 install textblob
 from textblob import TextBlob
+
 # pip3 install news-please
 # pip3 install newspaper3k
 from newsplease import NewsPlease
-from newspaper import Article
+#from newspaper import Article
+
 # pip install beautifulsoup4
 # pip install lxml
 # pip install html5lib
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 
+def extract_by_newsplease(url):
+    content = NewsPlease.from_url(url)
+    headline = content.title
+    article = content.text
+    return headline, article
+
+'''
 def extract_by_newspaper(url):
     content = Article(url)
     content.download()
@@ -21,14 +30,6 @@ def extract_by_newspaper(url):
     article = content.text
     return headline, article
 
-
-def extract_by_newsplease(url):
-    content = NewsPlease.from_url(url)
-    headline = content.title
-    article = content.text
-    return headline, article
-
-
 def extract_by_soup(url):
     content = BeautifulSoup(url, "lxml")
     headline = content.title.string
@@ -36,9 +37,8 @@ def extract_by_soup(url):
     for i in content.find_all("p"):
         articleList.append(i.get_text())
         # print(i.get_text())
-
     return headline, articleList  # TODO modify output so article is string
-
+'''
 
 def word_similarity(word_1, word_2):
     '''
@@ -136,7 +136,7 @@ def entity_role_score(entity, role, article):
     for index in sentences:
         total_score += role_score_by_sentence(entity, role, index, sentences[index], article)
         count += 1
-    print(role + ": " + str(total_score))
+    print(role + ": " + str(total_score/count))
     return total_score / count
 
 
@@ -147,20 +147,46 @@ def main(url):
     '''
     headline, article = extract_by_newsplease(url)
     entities = get_top_entities(headline, article)
+    scores = {}
+    assignments = {}
+    '''
+    scores[("bob", "hero")] = 0.4
+    scores[("bob", "villain")] = 0.5
+    scores[("bob", "victim")] = 0.2
+
+    scores[("ds", "villain")] = 0.9
+    scores[("ds", "hero")] = 0.8
+    scores[("ds", "victim")] = 0.7
+    
+    scores[("ALICE", "villain")] = 0.89
+    scores[("ALICE", "hero")] = 0.5
+    scores[("ALICE", "victim")] = 0.7
+    #DS:VILLAIN; ALICE: VICTIM; BOB: HERO
+    '''
+    # Calculate all three scores for each entity and add to dictionary scores
     for entity in entities:
-        role = "hero"
-        score = entity_role_score(entity, "hero", article)
-        cur = entity_role_score(entity, "villain", article)
-        if cur > score:
-            score = cur
-            role = "villain"
-        if entity_role_score(entity, "victim", article) > score:
-            role = "victim"
-        entity.role = role
-        print(entity)
-        print(entity.role)
+        hero_score = entity_role_score(entity, "hero", article)
+        villain_score = entity_role_score(entity, "villain", article)
+        victim_score = entity_role_score(entity, "victim", article)
+        scores[(entity, "hero")] = hero_score
+        scores[(entity, "villain")] = villain_score
+        scores[(entity, "victim")] = victim_score
+
+    # Sort scores in descending order and assign roles
+    sorted_scores = sorted(scores, key = scores.get, reverse = True)
+    for w in sorted_scores:
+        if w in scores:
+            role_to_assign = w[1]
+            entity_to_assign = w[0]
+            assignments[role_to_assign] = (entity_to_assign, scores[w])
+            for entity, role in list(scores):
+                if (role == role_to_assign or entity == entity_to_assign) and \
+                        (entity, role) in scores:
+                    del scores[(entity, role)]             
+    for role in assignments:
+        print(role + ": " +  assignments[role][0].name + " " + str(assignments[role][1]))
     return entities
 
 
 if __name__ == "__main__":
-    main("https://www.npr.org/2019/01/20/687000735/winter-storm-grounds-flights-delays-trains-and-knocks-out-power")
+    main("https://www.npr.org/2019/01/29/689581417/apple-disables-group-facetime-after-security-flaw-let-callers-secretly-eavesdrop")

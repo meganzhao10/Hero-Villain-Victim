@@ -153,7 +153,7 @@ def entity_role_score(entity, role, article):
     for index in sentences:
         total_score += role_score_by_sentence(entity, role, index, sentences[index], article)
         count += 1
-    print(role + ": " + str(total_score))
+    print(role + ": " + str(total_score/count))
     return total_score / count
 
 
