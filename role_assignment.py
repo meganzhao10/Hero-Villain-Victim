@@ -3,6 +3,7 @@ from nltk.corpus import wordnet as wn
 from entity_recognition import get_top_entities
 from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 from stop_words import STOP_WORDS
+from functools import lru_cache
 
 # pip3 install textblob
 from textblob import TextBlob
@@ -28,7 +29,28 @@ IGNORE_POS = [
     "RP",  # particle
     "CD",  # cardinal digit
     "POS",  # possessive
+    "UH",  # interjection
+    "TO",  # to
+    "LS",  # list marker
+    "EX",  # existential there
+    "FW",  # foreign word
 ]
+
+
+def get_wn_pos(nltk_pos):
+    '''
+    Converts the given nltk part of speech to a word net part of speech
+    '''
+    if nltk_pos in ["NN", "NNS", "NNP", "NNPS"]:
+        return wn.NOUN
+    elif nltk_pos in ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ", "MD"]:
+        return wn.VERB
+    elif nltk_pos in ["JJ", "JJR", "JJS"]:
+        return wn.ADJ
+    elif nltk_pos in ["RB", "RBR", "RBS", "WRB"]:
+        return wn.ADV
+    else:
+        return None
 
 
 # TODO Do we need to make words lowercase at any point in analysis???
@@ -60,12 +82,16 @@ def extract_by_soup(url):
     return headline, articleList  # TODO modify output so article is string
 
 
-def word_similarity(word1, word2):
+@lru_cache(maxsize=1000000)
+def word_similarity(word1, word1_pos, word2):
     '''
     Returns the Wu-Palmer similarity between the given words.
     Values range between 0 (least similar) and 1 (most similar).
     '''
-    syns_w1 = wn.synsets(word1)
+    if word1_pos is not None:
+        syns_w1 = wn.synsets(word1, pos=word1_pos)
+    else:
+        syns_w1 = wn.synsets(word1)
     syns_w2 = wn.synsets(word2)
     score = 0
     for w1 in syns_w1:
@@ -107,20 +133,20 @@ def choose_role(word):
         return ["hero", "villain", "victim"]
 
 
-def similarity_to_role(word, role):
+def similarity_to_role(word, word_pos, role):
     similarity_total = 0
     if role == "hero":
         dict_length = len(HERO_DICT)
         for hero_term in HERO_DICT:
-            similarity_total += word_similarity(word, hero_term)
+            similarity_total += word_similarity(word, word_pos, hero_term)
     elif role == "villain":
         dict_length = len(VILLAIN_DICT)
         for villain_term in VILLAIN_DICT:
-            similarity_total += word_similarity(word, villain_term)
+            similarity_total += word_similarity(word, word_pos, villain_term)
     elif role == "victim":
         dict_length = len(VICTIM_DICT)
         for victim_term in VICTIM_DICT:
-            similarity_total += word_similarity(word, victim_term)
+            similarity_total += word_similarity(word, word_pos, victim_term)
     return similarity_total / dict_length
 
 
@@ -161,7 +187,7 @@ def role_score_by_sentence(entity, role, index, tokenized_article):
             if not skip_word(word, pos):
                 term_role = choose_role(word)
                 if role in term_role:
-                    cur_score += similarity_to_role(word, role)
+                    cur_score += similarity_to_role(word, get_wn_pos(word), role)
                     # cur_score += additional_score(entity, role, sentence[i])
                     cur_score *= decay_function(0.5, entity_location, i)  # TODO update f value
         total_score += cur_score
@@ -208,4 +234,4 @@ def main(url):
 
 
 if __name__ == "__main__":
-    main("https://www.bbc.com/sport/football/46188110")
+    main("https://www.bbc.com/news/world-us-canada-47047394")
