@@ -347,4 +347,4 @@ def main2(url):
 
 
 if __name__ == "__main__":
-    main2("https://www.bbc.com/news/world-us-canada-47047394")
+    main("https://www.bbc.com/news/world-us-canada-47047394")
