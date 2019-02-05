@@ -4,13 +4,16 @@ from role_assignment import word_similarity, skip_word, HERO, VILLAIN, VICTIM
 from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 
 
+# 10k file: 'google-10000-english-usa.txt'
+# 100k file: 'wiki-100k.txt'
 with open('google-10000-english-usa.txt') as input_file:
 
     dic = {}
     i = 0
     for line in input_file:
         word = line.strip()
-        if not skip_word(word, None):
+        # Skip comments and words ignored for analysis
+        if word[0] != '#' and not skip_word(word, None):
             scores = [0, 0, 0]
             dict_length = len(HERO_DICT)
             for hero_term in HERO_DICT:
