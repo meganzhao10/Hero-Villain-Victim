@@ -4,6 +4,7 @@ from entity_recognition import get_top_entities
 from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 from stop_words import STOP_WORDS
 from functools import lru_cache
+from similarity_dictionary import SIM_DIC
 
 # pip3 install textblob
 from textblob import TextBlob
@@ -60,7 +61,7 @@ def role_to_string(role):
 
 def get_wn_pos(nltk_pos):
     '''
-    Converts the given nltk part of speech to a word net part of speech
+    Converts the given nltk part of speech to a word net part of speech.
     '''
     if nltk_pos in ["NN", "NNS", "NNP", "NNPS"]:
         return wn.NOUN
@@ -104,10 +105,11 @@ def extract_by_soup(url):
 
 
 @lru_cache(maxsize=1000000)
-def word_similarity(word1, word1_pos, word2):
+def word_similarity(word1, word2, word1_pos=None):
     '''
     Returns the Wu-Palmer similarity between the given words.
     Values range between 0 (least similar) and 1 (most similar).
+    Optional part of speech argument for word1 limits WordNet synsets.
     '''
     if word1_pos is not None:
         syns_w1 = wn.synsets(word1, pos=word1_pos)
@@ -124,6 +126,9 @@ def word_similarity(word1, word1_pos, word2):
 
 
 def decay_function(decay_factor, entity_location, term_index):
+    '''
+    Accounts for decay in score based on distance between words.
+    '''
     distance = abs(term_index - entity_location[0])
     if len(entity_location) > 1:
         distance = min(distance, abs(term_index - entity_location[1]))
@@ -133,7 +138,7 @@ def decay_function(decay_factor, entity_location, term_index):
 def sentiment(word):
     '''
     Returns the sentiment of the given string as a float within
-    the range [-1.0, 1.0]
+    the range [-1.0, 1.0].
     '''
     # TODO deal with negations???
     word_blob = TextBlob(word)
@@ -154,21 +159,38 @@ def choose_role(word):
         return [HERO, VILLAIN, VICTIM]
 
 
-# @lru_cache(maxsize=1000000)
-def similarity_to_role(word, word_pos, role):
+def similarity_to_role(word, role, word_pos=None):
+    '''
+    Returns the similarity of the word to the role. Optional part of speech
+    argument to be passed along to WordNet.
+    '''
     similarity_total = 0
+    scores = SIM_DIC.get(word)
+
     if role == HERO:
-        dict_length = len(HERO_DICT)
-        for hero_term in HERO_DICT:
-            similarity_total += word_similarity(word, word_pos, hero_term)
+        if scores is None:
+            dict_length = len(HERO_DICT)
+            for hero_term in HERO_DICT:
+                similarity_total += word_similarity(word, hero_term, word1_pos=word_pos)
+        else:
+            return scores[HERO]
+
     elif role == VILLAIN:
-        dict_length = len(VILLAIN_DICT)
-        for villain_term in VILLAIN_DICT:
-            similarity_total += word_similarity(word, word_pos, villain_term)
+        if scores is None:
+            dict_length = len(VILLAIN_DICT)
+            for villain_term in VILLAIN_DICT:
+                similarity_total += word_similarity(word, villain_term, word1_pos=word_pos)
+        else:
+            return scores[VILLAIN]
+
     elif role == VICTIM:
-        dict_length = len(VICTIM_DICT)
-        for victim_term in VICTIM_DICT:
-            similarity_total += word_similarity(word, word_pos, victim_term)
+        if scores is None:
+            dict_length = len(VICTIM_DICT)
+            for victim_term in VICTIM_DICT:
+                similarity_total += word_similarity(word, victim_term, word1_pos=word_pos)
+        else:
+            return scores[VICTIM]
+
     return similarity_total / dict_length
 
 
@@ -178,7 +200,7 @@ def skip_word(word, pos):
     '''
     # pronouns, conjunctions, particles, determiners
     if any((
-        len(word) < 2,
+        len(word) < 3,
         word.lower() in STOP_WORDS,
         pos in IGNORE_POS,
         word == "''",
@@ -209,7 +231,7 @@ def role_score_by_sentence(entity, role, index, tokenized_article):
             if not skip_word(word, pos):
                 term_role = choose_role(word)
                 if role in term_role:
-                    cur_score += similarity_to_role(word, get_wn_pos(pos), role)
+                    cur_score += similarity_to_role(word, role, word_pos=get_wn_pos(pos))
                     # cur_score += additional_score(entity, role, word)
                     cur_score *= decay_function(0.5, entity_location, i)  # TODO update f value
         total_score += cur_score
@@ -315,7 +337,7 @@ def main2(url):
             term_role = choose_role(word)
             scores = {}
             for role in term_role:
-                scores[role] = similarity_to_role(word, get_wn_pos(pos), role)
+                scores[role] = similarity_to_role(word, role, word_pos=get_wn_pos(pos))
             for entity in entities_in_sent:
                 entity_index = entities.index(entity)
                 for role in term_role:
@@ -331,7 +353,7 @@ def main2(url):
                         victim_scores[entity_index] += cur_score
 
     # Compute total scores
-    for i in range(len(entities)):
+    for i, entity in enumerate(entities):
         hero_score = hero_scores[i] / counts[i]
         villain_score = villain_scores[i] / counts[i]
         victim_score = victim_scores[i] / counts[i]
@@ -347,4 +369,4 @@ def main2(url):
 
 
 if __name__ == "__main__":
-    main("https://www.bbc.com/news/world-us-canada-47047394")
+    main2("https://www.bbc.com/news/world-us-canada-47047394")
