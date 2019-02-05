@@ -1,6 +1,9 @@
+from nltk import pos_tag, sent_tokenize, word_tokenize
 from nltk.corpus import wordnet as wn
-from entity_recognition import get_top_entities, extract_article
-from role_dictionaries import *
+from entity_recognition import get_top_entities
+from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
+from stop_words import STOP_WORDS
+from functools import lru_cache
 
 # pip3 install textblob
 from textblob import TextBlob
@@ -12,6 +15,66 @@ from newspaper import Article
 # pip install lxml
 # pip install html5lib
 from bs4 import BeautifulSoup
+
+
+# Parts of speech that are invalid in WordNet similarity function
+IGNORE_POS = [
+    "PRP",  # personal pronoun
+    "PRP$",  # possessive pronoun
+    "WP",  # wh-pronoun
+    "WP$",  # possessive wh-pronoun
+    "CC",  # coordinating conjunction
+    "IN",  # preposition/subordinating conjunction
+    "DT",  # determiner
+    "WDT",  # wh-determiner
+    "PDT",  # predeterminer
+    "RP",  # particle
+    "CD",  # cardinal digit
+    "POS",  # possessive
+    "UH",  # interjection
+    "TO",  # to
+    "LS",  # list marker
+    "EX",  # existential there
+    "FW",  # foreign word
+]
+
+# Constants to represent roles
+HERO = 0
+VILLAIN = 1
+VICTIM = 2
+
+
+def role_to_string(role):
+    '''
+    Converts a given role to a string.
+    '''
+    if role == HERO:
+        return "hero"
+    elif role == VILLAIN:
+        return "villain"
+    elif role == VICTIM:
+        return "victim"
+    else:
+        return None
+
+
+def get_wn_pos(nltk_pos):
+    '''
+    Converts the given nltk part of speech to a word net part of speech
+    '''
+    if nltk_pos in ["NN", "NNS", "NNP", "NNPS"]:
+        return wn.NOUN
+    elif nltk_pos in ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ", "MD"]:
+        return wn.VERB
+    elif nltk_pos in ["JJ", "JJR", "JJS"]:
+        return wn.ADJ
+    elif nltk_pos in ["RB", "RBR", "RBS", "WRB"]:
+        return wn.ADV
+    else:
+        return None
+
+
+# TODO Do we need to make words lowercase at any point in analysis???
 
 def extract_by_newspaper(url):
     content = Article(url)
@@ -40,13 +103,17 @@ def extract_by_soup(url):
     return headline, articleList  # TODO modify output so article is string
 
 
-def word_similarity(word_1, word_2):
+@lru_cache(maxsize=1000000)
+def word_similarity(word1, word1_pos, word2):
     '''
     Returns the Wu-Palmer similarity between the given words.
     Values range between 0 (least similar) and 1 (most similar).
     '''
-    syns_w1 = wn.synsets(word_1)
-    syns_w2 = wn.synsets(word_2)
+    if word1_pos is not None:
+        syns_w1 = wn.synsets(word1, pos=word1_pos)
+    else:
+        syns_w1 = wn.synsets(word1)
+    syns_w2 = wn.synsets(word2)
     score = 0
     for w1 in syns_w1:
         for w2 in syns_w2:
@@ -54,6 +121,7 @@ def word_similarity(word_1, word_2):
             if cur_score:
                 score = max(score, cur_score)
     return score
+
 
 def decay_function(decay_factor, entity_location, term_index):
     distance = abs(term_index - entity_location[0])
@@ -67,6 +135,7 @@ def sentiment(word):
     Returns the sentiment of the given string as a float within
     the range [-1.0, 1.0]
     '''
+    # TODO deal with negations???
     word_blob = TextBlob(word)
     return word_blob.sentiment.polarity
 
@@ -77,50 +146,72 @@ def choose_role(word):
     to be most useful.
     '''
     s = sentiment(word)
-    if s > 0:
-        return "hero"
-    elif s < 0:
-        return "villain"
+    if s > 0.4:  # TODO update value to expand neutral range
+        return [HERO]
+    elif s < -0.4:
+        return [VILLAIN, VICTIM]
     else:
-        return "all"
+        return [HERO, VILLAIN, VICTIM]
 
 
-def similarity_to_role(word, role):
+# @lru_cache(maxsize=1000000)
+def similarity_to_role(word, word_pos, role):
     similarity_total = 0
-    if role == "hero":
+    if role == HERO:
         dict_length = len(HERO_DICT)
         for hero_term in HERO_DICT:
-            similarity_total += word_similarity(word, hero_term) / dict_length
-    elif role == "villain":
+            similarity_total += word_similarity(word, word_pos, hero_term)
+    elif role == VILLAIN:
         dict_length = len(VILLAIN_DICT)
         for villain_term in VILLAIN_DICT:
-            similarity_total += word_similarity(word, villain_term) / dict_length
-    elif role == "victim":
+            similarity_total += word_similarity(word, word_pos, villain_term)
+    elif role == VICTIM:
         dict_length = len(VICTIM_DICT)
         for victim_term in VICTIM_DICT:
-            similarity_total += word_similarity(word, victim_term) / dict_length
-    return similarity_total
+            similarity_total += word_similarity(word, word_pos, victim_term)
+    return similarity_total / dict_length
 
 
-def role_score_by_sentence(entity, role, index, entity_location, article):
+def skip_word(word, pos):
+    '''
+    Returns true if the given word should be ignored in analysis.
+    '''
+    # pronouns, conjunctions, particles, determiners
+    if any((
+        len(word) < 2,
+        word.lower() in STOP_WORDS,
+        pos in IGNORE_POS,
+        word == "''",
+        word == "``",
+    )):
+        return True
+
+    return False
+
+
+def role_score_by_sentence(entity, role, index, tokenized_article):
     '''
     Calculates the role score of the entity in the given sentence.
-    entity_location is a list where the elements are the beginning and ending indices
     '''
+    entity_location = entity.locations[index]  # A list where the elements are the beginning and ending indices
     total_score = 0
     # article from a string to a list of sentences
-    article = extract_article(article)
-    sentence = article[index]
+    sentence = word_tokenize(tokenized_article[index])
+    tagged_sentence = pos_tag(sentence)
     begin_index = entity_location[0]
     end_index = entity_location[1] if len(entity_location) > 1 else entity_location[0]
+    # TODO I think if an entity appears twice in a sentence then we need to do something different with locations
     for i in range(len(sentence)):
         cur_score = 0
         if not begin_index <= i <= end_index:
-            term_role = choose_role(sentence[i])
-            if term_role == role or term_role == "all":
-                cur_score += similarity_to_role(sentence[i], role)
-                # cur_score += additional_score(entity, role, sentence[i])
-                cur_score *= decay_function(0.5, entity_location, i)
+            word = sentence[i]
+            pos = tagged_sentence[i][1]
+            if not skip_word(word, pos):
+                term_role = choose_role(word)
+                if role in term_role:
+                    cur_score += similarity_to_role(word, get_wn_pos(pos), role)
+                    # cur_score += additional_score(entity, role, word)
+                    cur_score *= decay_function(0.5, entity_location, i)  # TODO update f value
         total_score += cur_score
     return total_score
 
@@ -130,13 +221,12 @@ def entity_role_score(entity, role, article):
     Calculates the role score of the entity by averaging the
     role scores of the sentences where the entity appears.
     '''
-    sentences = entity.locations
     total_score = 0
     count = 0
-    for index in sentences:
-        total_score += role_score_by_sentence(entity, role, index, sentences[index], article)
+    for index in entity.locations:
+        total_score += role_score_by_sentence(entity, role, index, article)
         count += 1
-    print(role + ": " + str(total_score/count))
+    print(role_to_string(role) + ": " + str(total_score/count))
     return total_score / count
 
 
@@ -146,21 +236,115 @@ def main(url):
     assign each entity the role with the highest role score.
     '''
     headline, article = extract_by_newsplease(url)
-    entities = get_top_entities(headline, article)
+    tokenized_article = sent_tokenize(article)
+    entities = get_top_entities(headline, tokenized_article)
     for entity in entities:
-        role = "hero"
-        score = entity_role_score(entity, "hero", article)
-        cur = entity_role_score(entity, "villain", article)
+        # TODO calculate headline score ??
+        role = HERO
+        score = entity_role_score(entity, HERO, tokenized_article)
+        cur = entity_role_score(entity, VILLAIN, tokenized_article)
         if cur > score:
             score = cur
-            role = "villain"
-        if entity_role_score(entity, "victim", article) > score:
-            role = "victim"
-        entity.role = role
+            role = VILLAIN
+        if entity_role_score(entity, VICTIM, tokenized_article) > score:
+            role = VICTIM
+        entity.role = role_to_string(role)
         print(entity)
         print(entity.role)
+        # TODO assign threshold ???
     return entities
 
 
+def is_word_part_of_entity(entities_in_sent, sentence_index, word_index):
+    for entity in entities_in_sent:
+        entity_location = entity.locations[sentence_index]
+        begin_index = entity_location[0]
+        end_index = entity_location[1] if len(entity_location) > 1 else entity_location[0]
+        # TODO I think if an entity appears twice in a sentence then we need to do something different with locations
+        if begin_index <= word_index <= end_index:
+            return True
+    return False
+
+
+def main2(url):
+    headline, article = extract_by_newsplease(url)
+    tokenized_article = sent_tokenize(article)
+    entities = get_top_entities(headline, tokenized_article)
+
+    # Initialize scores and counts (indexed by entities)
+    hero_scores = []
+    villain_scores = []
+    victim_scores = []
+    counts = []
+    for i in range(len(entities)):
+        hero_scores.append(0)
+        villain_scores.append(0)
+        victim_scores.append(0)
+        counts.append(0)
+
+    # Loop through each sentence
+    for sentence_index in range(len(tokenized_article)):
+
+        # Find which entities in sentence and update counts
+        entities_in_sent = []
+        for i, entity in enumerate(entities):
+            if sentence_index in entity.locations:
+                counts[i] += 1
+                entities_in_sent.append(entity)
+
+        # Skip sentence if no entities in it
+        if not entities_in_sent:
+            continue
+
+        # Loop through words in sentence
+        sentence = word_tokenize(tokenized_article[sentence_index])
+        for i in range(len(sentence)):
+
+            # Skip word if it is part of an entity
+            if is_word_part_of_entity(entities_in_sent, sentence_index, i):
+                continue
+
+            # Check if word is a skip word (stop words, invalid POS, punctuation)
+            tagged_sentence = pos_tag(sentence)
+            word = sentence[i]
+            pos = tagged_sentence[i][1]
+            if skip_word(word, pos):
+                continue
+
+            # Update scores for corresponding roles
+            term_role = choose_role(word)
+            scores = {}
+            for role in term_role:
+                scores[role] = similarity_to_role(word, get_wn_pos(pos), role)
+            for entity in entities_in_sent:
+                entity_index = entities.index(entity)
+                for role in term_role:
+                    cur_score = scores[role]
+                    # cur_score += additional_score(entity, role, word)
+                    cur_score *= decay_function(0.5, entity.locations[sentence_index], i)  # TODO update f value
+
+                    if role == HERO:
+                        hero_scores[entity_index] += cur_score
+                    elif role == VILLAIN:
+                        villain_scores[entity_index] += cur_score
+                    elif role == VICTIM:
+                        victim_scores[entity_index] += cur_score
+
+    # Compute total scores
+    for i in range(len(entities)):
+        hero_score = hero_scores[i] / counts[i]
+        villain_score = villain_scores[i] / counts[i]
+        victim_score = victim_scores[i] / counts[i]
+
+        print(entity)
+        print("HERO:", hero_score)
+        print("VILLAIN:", villain_score)
+        print("VICTIM:", victim_score)
+
+        # entity.role = role_to_string(role)
+        # print(entity)
+        # print(entity.role)
+
+
 if __name__ == "__main__":
-    main("https://www.npr.org/2019/01/20/687000735/winter-storm-grounds-flights-delays-trains-and-knocks-out-power")
+    main("https://www.bbc.com/news/world-us-canada-47047394")
