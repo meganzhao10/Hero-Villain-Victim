@@ -353,7 +353,7 @@ def main2(url):
                         victim_scores[entity_index] += cur_score
 
     # Compute total scores
-    for i in range(len(entities)):
+    for i, entity in enumerate(entities):
         hero_score = hero_scores[i] / counts[i]
         villain_score = villain_scores[i] / counts[i]
         victim_score = victim_scores[i] / counts[i]
