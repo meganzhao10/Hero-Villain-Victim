@@ -151,9 +151,9 @@ def choose_role(word):
     to be most useful.
     '''
     s = sentiment(word)
-    if s > 0.4:  # TODO update value to expand neutral range
+    if s > 0.15:  # TODO consider updating value to adjust neutral range
         return [HERO]
-    elif s < -0.4:
+    elif s < -0.15:
         return [VILLAIN, VICTIM]
     else:
         return [HERO, VILLAIN, VICTIM]
