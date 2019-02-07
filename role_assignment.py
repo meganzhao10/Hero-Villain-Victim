@@ -257,7 +257,7 @@ def main(url):
     Retrieve the three top entities from entity_recognition.py;
     assign each entity the role with the highest role score.
     '''
-    headline, article = extract_by_newsplease(url)
+    headline, article = extract_by_newspaper(url)
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
     for entity in entities:
@@ -301,7 +301,7 @@ def get_top_words(word_dic):
 
 
 def main2(url):
-    headline, article = extract_by_newsplease(url)
+    headline, article = extract_by_newspaper(url)
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
 
@@ -399,4 +399,4 @@ def main2(url):
 
 
 if __name__ == "__main__":
-    main2("https://www.bbc.com/news/world-us-canada-47047394")
+    main2("https://us.cnn.com/2019/02/07/politics/adam-schiff-trump-white-house-staffers/index.html")
