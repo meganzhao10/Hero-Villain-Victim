@@ -1,4 +1,4 @@
-#NEED TO INSTALL 
+#NEED TO INSTALL
 #pip3 install newspaper3k
 
 
@@ -6,7 +6,7 @@ from newspaper import Article
 ## my device runs into error when trying to download punkt
 #nltk.download('punkt')
 
-url = "https://www.nbcnews.com/news/religion/ungodly-abuse-lasting-torment-new-tribes-missionary-kids-n967191"
+url = "https://www.cnn.com/2019/01/28/americas/cuba-tornado-dead-scli-intl/index.html"
 
 
 content = Article(url)
@@ -37,7 +37,7 @@ nbc
 
 
 Partially works for:
-NY Times partial 
+NY Times partial
 CNN (read more thing) - show part of the content, and then "Read More"...
 wsj: mainly because subsribtion restriction
 

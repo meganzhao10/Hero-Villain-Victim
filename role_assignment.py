@@ -288,20 +288,34 @@ def is_word_part_of_entity(entities_in_sent, sentence_index, word_index):
     return False
 
 
+def get_top_words(word_dic):
+    '''
+    Returns a list of the top three (word, score) pairs in the dictionary.
+    '''
+    result = []
+    for i, word in enumerate(sorted(word_dic, key=word_dic.get, reverse=True)):
+        if i > 2:
+            break
+        result.append((word, word_dic[word]))
+    return result
+
+
 def main2(url):
     headline, article = extract_by_newspaper(url)
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
 
-    # Initialize scores and counts (indexed by entities)
-    hero_scores = []
-    villain_scores = []
-    victim_scores = []
+    # Initialize scores, counts, top words (indexed by entities)
+    hero_scores, villain_scores, victim_scores = [], [], []
+    top_hero_words, top_villain_words, top_victim_words = [], [], []
     counts = []
     for i in range(len(entities)):
         hero_scores.append(0)
         villain_scores.append(0)
         victim_scores.append(0)
+        top_hero_words.append({})
+        top_villain_words.append({})
+        top_victim_words.append({})
         counts.append(0)
 
     # Loop through each sentence
@@ -344,13 +358,26 @@ def main2(url):
                     cur_score = scores[role]
                     # cur_score += additional_score(entity, role, word)
                     cur_score *= decay_function(0.5, entity.locations[sentence_index], i)  # TODO update f value
-
                     if role == HERO:
                         hero_scores[entity_index] += cur_score
+                        if word in top_hero_words[entity_index]:
+                            top_hero_words[entity_index][word] += cur_score
+                        else:
+                            top_hero_words[entity_index][word] = cur_score
+
                     elif role == VILLAIN:
                         villain_scores[entity_index] += cur_score
+                        if word in top_villain_words[entity_index]:
+                            top_villain_words[entity_index][word] += cur_score
+                        else:
+                            top_villain_words[entity_index][word] = cur_score
+
                     elif role == VICTIM:
                         victim_scores[entity_index] += cur_score
+                        if word in top_victim_words[entity_index]:
+                            top_victim_words[entity_index][word] += cur_score
+                        else:
+                            top_victim_words[entity_index][word] = cur_score
 
     # Compute total scores
     for i, entity in enumerate(entities):
@@ -360,8 +387,11 @@ def main2(url):
 
         print(entity)
         print("HERO:", hero_score)
+        print("HERO TOP WORDS:", get_top_words(top_hero_words[i]))
         print("VILLAIN:", villain_score)
+        print("VILLAIN TOP WORDS:", get_top_words(top_villain_words[i]))
         print("VICTIM:", victim_score)
+        print("VICTIM TOP WORDS:", get_top_words(top_victim_words[i]))
 
         # entity.role = role_to_string(role)
         # print(entity)
