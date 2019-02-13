@@ -5,6 +5,9 @@ from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 from stop_words import STOP_WORDS
 from functools import lru_cache
 from similarity_dictionary import SIM_DIC
+import string
+import sys
+import time
 
 # pip3 install textblob
 from textblob import TextBlob
@@ -122,6 +125,7 @@ def word_similarity(word1, word2, word1_pos=None):
             cur_score = w1.wup_similarity(w2)
             if cur_score:
                 score = max(score, cur_score)
+#    print(word1 + " " + word2 + " " + str(score))
     return score
 
 
@@ -343,6 +347,10 @@ def main2(url):
             # Check if word is a skip word (stop words, invalid POS, punctuation)
             tagged_sentence = pos_tag(sentence)
             word = sentence[i]
+
+            # strip all leading and trailing puntuation in word
+            word = word.strip(string.punctuation)
+            
             pos = tagged_sentence[i][1]
             if skip_word(word, pos):
                 continue
@@ -384,7 +392,7 @@ def main2(url):
         hero_score = hero_scores[i] / counts[i]
         villain_score = villain_scores[i] / counts[i]
         victim_score = victim_scores[i] / counts[i]
-
+        print("----------------------------------------------------------")
         print(entity)
         print("HERO:", hero_score)
         print("HERO TOP WORDS:", get_top_words(top_hero_words[i]))
@@ -399,4 +407,7 @@ def main2(url):
 
 
 if __name__ == "__main__":
-    main2("https://us.cnn.com/2019/02/07/politics/adam-schiff-trump-white-house-staffers/index.html")
+    begin = time.time()
+    main2(sys.argv[1])
+    end = time.time()
+    print(end - begin)
