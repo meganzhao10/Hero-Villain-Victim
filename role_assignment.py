@@ -7,6 +7,10 @@ from functools import lru_cache
 from similarity_dictionary import SIM_DIC
 import re
 
+#pip install -U spacy
+#python3 -m spacy download xx
+import spacy
+
 # pip3 install textblob
 from textblob import TextBlob
 # pip3 install news-please
@@ -253,6 +257,32 @@ def entity_role_score(entity, role, article):
         count += 1
     print(role_to_string(role) + ": " + str(total_score/count))
     return total_score / count
+
+
+def active_passive_role(entity, aSentence):
+    '''
+    Determine whether the entity is an active or passive role 
+    depending on if it's subject or object in a sentence 
+    Active roles = subject or passive object
+    Passive roles = object or passive subject
+    '''
+    nlp = spacy.load('en')
+    aSent=nlp(aSentence)
+    for tok in aSent:
+        if (str(tok) == entity):
+            print(str(tok) + ": " + str(tok.dep_))
+            if (tok.dep_ == "nsubj" or tok.dep_ == "pobj"):
+                role = "active"
+                return role
+            elif (tok.dep_ == "dobj" or tok.dep_ == "nsubjpass"):
+                role = "passive"
+                return role
+            else:
+                role="neutral"
+                return role
+        else:
+            role= "notInSentence"
+            return role
 
 
 def main(url):
