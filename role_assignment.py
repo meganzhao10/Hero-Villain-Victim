@@ -202,14 +202,17 @@ def skip_word(word, pos):
     # pronouns, conjunctions, particles, determiners
     if any((
         len(word) < 3,
-        word.lower() in STOP_WORDS,
+        # word.lower() in STOP_WORDS,
         pos in IGNORE_POS,
         word == "''",
         word == "``",
         word == '"',
-        re.match()
     )):
         return True
+
+    for stop in STOP_WORDS:
+        if re.fullmatch(stop, word.lower()):
+            return True
 
     return False
 
