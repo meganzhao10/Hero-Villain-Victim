@@ -91,22 +91,22 @@ def extract_by_newspaper(url):
     return headline, article
 
 
-def extract_by_newsplease(url):
-    content = NewsPlease.from_url(url)
-    headline = content.title
-    article = content.text
-    return headline, article
+#def extract_by_newsplease(url):
+ #   content = NewsPlease.from_url(url)
+#    headline = content.title
+#    article = content.text
+#    return headline, article
 
 
-def extract_by_soup(url):
-    content = BeautifulSoup(url, "lxml")
-    headline = content.title.string
-    articleList = list()
-    for i in content.find_all("p"):
-        articleList.append(i.get_text())
+#def extract_by_soup(url):
+#    content = BeautifulSoup(url, "lxml")
+#    headline = content.title.string
+#    articleList = list()
+#    for i in content.find_all("p"):
+#        articleList.append(i.get_text())
         # print(i.get_text())
 
-    return headline, articleList  # TODO modify output so article is string
+#    return headline, articleList  # TODO modify output so article is string
 
 
 @lru_cache(maxsize=1000000)
