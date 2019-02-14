@@ -15,12 +15,12 @@ import spacy
 from textblob import TextBlob
 # pip3 install news-please
 # pip3 install newspaper3k
-from newsplease import NewsPlease
+#from newsplease import NewsPlease
 from newspaper import Article
 # pip install beautifulsoup4
 # pip install lxml
 # pip install html5lib
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 
 
 # Parts of speech that are invalid in WordNet similarity function
