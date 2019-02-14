@@ -205,6 +205,7 @@ def skip_word(word, pos):
         pos in IGNORE_POS,
         word == "''",
         word == "``",
+        word == '"',
     )):
         return True
 
