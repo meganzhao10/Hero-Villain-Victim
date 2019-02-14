@@ -39,4 +39,4 @@ STOP_WORDS = ['d', 'caption', 'image', 'age', 'therefore', 'often', 'told',
 'noon', 'afterward', 'last', 'rarely', 'usually', 'hour', 'hours', 'week',
 'weeks', 'minute', 'minutes', 'although', 'rather', 'finally', 'hence', 'since',
  'result', 'resulted', 'especially', 'certainly', 'right', 'left',
-'center', '\d\d?:\d{2}(P.M.)?(A.M)?(am)?(pm)?', '\d*']
+'center', '\d\d?:\d{2}(p\.m)?(a\.m)?(am)?(pm)?', '\d*']

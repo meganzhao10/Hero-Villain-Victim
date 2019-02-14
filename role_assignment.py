@@ -200,18 +200,15 @@ def skip_word(word, pos):
     Returns true if the given word should be ignored in analysis.
     '''
     # pronouns, conjunctions, particles, determiners
-    if any((
-        len(word) < 3,
-        # word.lower() in STOP_WORDS,
-        pos in IGNORE_POS,
-        word == "''",
-        word == "``",
-        word == '"',
-    )):
-        return True
-
     for stop in STOP_WORDS:
-        if re.fullmatch(stop, word.lower()):
+        if any((
+            len(word) < 3,
+            re.fullmatch(stop, word.lower()),
+            pos in IGNORE_POS,
+            word == "''",
+            word == "``",
+            word == '"',
+        )):
             return True
 
     return False
