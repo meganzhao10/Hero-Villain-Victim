@@ -5,6 +5,7 @@ from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 from stop_words import STOP_WORDS
 from functools import lru_cache
 from similarity_dictionary import SIM_DIC
+import re
 
 # pip3 install textblob
 from textblob import TextBlob
@@ -206,6 +207,7 @@ def skip_word(word, pos):
         word == "''",
         word == "``",
         word == '"',
+        re.match()
     )):
         return True
 
