@@ -5,17 +5,22 @@ from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 from stop_words import STOP_WORDS
 from functools import lru_cache
 from similarity_dictionary import SIM_DIC
+import re
+
+#pip install -U spacy
+#python3 -m spacy download xx
+import spacy
 
 # pip3 install textblob
 from textblob import TextBlob
 # pip3 install news-please
 # pip3 install newspaper3k
-from newsplease import NewsPlease
+#from newsplease import NewsPlease
 from newspaper import Article
 # pip install beautifulsoup4
 # pip install lxml
 # pip install html5lib
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 
 
 # Parts of speech that are invalid in WordNet similarity function
@@ -86,22 +91,22 @@ def extract_by_newspaper(url):
     return headline, article
 
 
-def extract_by_newsplease(url):
-    content = NewsPlease.from_url(url)
-    headline = content.title
-    article = content.text
-    return headline, article
+#def extract_by_newsplease(url):
+ #   content = NewsPlease.from_url(url)
+#    headline = content.title
+#    article = content.text
+#    return headline, article
 
 
-def extract_by_soup(url):
-    content = BeautifulSoup(url, "lxml")
-    headline = content.title.string
-    articleList = list()
-    for i in content.find_all("p"):
-        articleList.append(i.get_text())
+#def extract_by_soup(url):
+#    content = BeautifulSoup(url, "lxml")
+#    headline = content.title.string
+#    articleList = list()
+#    for i in content.find_all("p"):
+#        articleList.append(i.get_text())
         # print(i.get_text())
 
-    return headline, articleList  # TODO modify output so article is string
+#    return headline, articleList  # TODO modify output so article is string
 
 
 @lru_cache(maxsize=1000000)
@@ -199,14 +204,16 @@ def skip_word(word, pos):
     Returns true if the given word should be ignored in analysis.
     '''
     # pronouns, conjunctions, particles, determiners
-    if any((
-        len(word) < 3,
-        word.lower() in STOP_WORDS,
-        pos in IGNORE_POS,
-        word == "''",
-        word == "``",
-    )):
-        return True
+    for stop in STOP_WORDS:
+        if any((
+            len(word) < 3,
+            re.fullmatch(stop, word.lower()),
+            pos in IGNORE_POS,
+            word == "''",
+            word == "``",
+            word == '"',
+        )):
+            return True
 
     return False
 
@@ -250,6 +257,32 @@ def entity_role_score(entity, role, article):
         count += 1
     print(role_to_string(role) + ": " + str(total_score/count))
     return total_score / count
+
+
+def active_passive_role(entity, aSentence):
+    '''
+    Determine whether the entity is an active or passive role 
+    depending on if it's subject or object in a sentence 
+    Active roles = subject or passive object
+    Passive roles = object or passive subject
+    '''
+    nlp = spacy.load('en')
+    aSent=nlp(aSentence)
+    for tok in aSent:
+        if (str(tok) == entity):
+            print(str(tok) + ": " + str(tok.dep_))
+            if (tok.dep_ == "nsubj" or tok.dep_ == "pobj"):
+                role = "active"
+                return role
+            elif (tok.dep_ == "dobj" or tok.dep_ == "nsubjpass"):
+                role = "passive"
+                return role
+            else:
+                role="neutral"
+                return role
+        else:
+            role= "notInSentence"
+            return role
 
 
 def main(url):
