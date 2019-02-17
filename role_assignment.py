@@ -261,8 +261,8 @@ def entity_role_score(entity, role, article):
 
 def active_passive_role(entity, aSentence):
     '''
-    Determine whether the entity is an active or passive role 
-    depending on if it's subject or object in a sentence 
+    Determine whether the entity is an active or passive role
+    depending on if it's subject or object in a sentence
     Active roles = subject or passive object
     Passive roles = object or passive subject
     '''
@@ -399,28 +399,29 @@ def main2(url):
                             top_victim_words[entity_index][word] = cur_score
 
     # Compute total headline scores
-    print("HEADLINE:")
-    for i, entity in enumerate(entities):
-        if counts[i] != 0:
-            hero_score = hero_scores[i] / counts[i]
-            villain_score = villain_scores[i] / counts[i]
-            victim_score = victim_scores[i] / counts[i]
-        else:
-            hero_score, villain_score, victim_score = 0, 0, 0
-
-        print(entity)
-        print("HERO:", hero_score)
-        print("HERO TOP WORDS:", get_top_words(top_hero_words[i]))
-        print("VILLAIN:", villain_score)
-        print("VILLAIN TOP WORDS:", get_top_words(top_villain_words[i]))
-        print("VICTIM:", victim_score)
-        print("VICTIM TOP WORDS:", get_top_words(top_victim_words[i]))
-
-        # entity.role = role_to_string(role)
-        # print(entity)
-        # print(entity.role)
-
-        print("------------------------")
+    # TODO incorporate this headline code into actual assignment
+    # print("HEADLINE:")
+    # for i, entity in enumerate(entities):
+    #     if counts[i] != 0:
+    #         hero_score = hero_scores[i] / counts[i]
+    #         villain_score = villain_scores[i] / counts[i]
+    #         victim_score = victim_scores[i] / counts[i]
+    #     else:
+    #         hero_score, villain_score, victim_score = 0, 0, 0
+    #
+    #     print(entity)
+    #     print("HERO:", hero_score)
+    #     print("HERO TOP WORDS:", get_top_words(top_hero_words[i]))
+    #     print("VILLAIN:", villain_score)
+    #     print("VILLAIN TOP WORDS:", get_top_words(top_villain_words[i]))
+    #     print("VICTIM:", victim_score)
+    #     print("VICTIM TOP WORDS:", get_top_words(top_victim_words[i]))
+    #
+    #     # entity.role = role_to_string(role)
+    #     # print(entity)
+    #     # print(entity.role)
+    #
+    #     print("------------------------")
 
     # Initialize scores, counts, top words (indexed by entities)
     hero_scores, villain_scores, victim_scores = [], [], []
