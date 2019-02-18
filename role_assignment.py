@@ -270,7 +270,7 @@ def active_passive_role(entity, aSentence):
     aSent=nlp(aSentence)
     for tok in aSent:
         if (str(tok) == entity):
-            print(str(tok) + ": " + str(tok.dep_))
+            #print(str(tok) + ": " + str(tok.dep_))
             if (tok.dep_ == "nsubj" or tok.dep_ == "pobj"):
                 role = "active"
                 return role
