@@ -519,4 +519,4 @@ def main2(url):
 
 
 if __name__ == "__main__":
-    main2("https://us.cnn.com/2019/02/07/politics/adam-schiff-trump-white-house-staffers/index.html")
+    main2("https://www.washingtonpost.com/politics/2019/02/17/uncharted-territory-political-legal-hits-continue-after-trumps-emergency-declaration/?utm_term=.471246b04920")
