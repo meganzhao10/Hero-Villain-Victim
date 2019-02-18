@@ -125,6 +125,7 @@ def word_similarity(word1, word2, word1_pos=None):
     for w1 in syns_w1:
         for w2 in syns_w2:
             cur_score = w1.wup_similarity(w2)
+            cur_score = w2.wup_similarity(w1) if not cur_score else cur_score
             if cur_score:
                 score = max(score, cur_score)
     return score
