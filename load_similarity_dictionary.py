@@ -1,7 +1,5 @@
 import json
-# from top_words import TOP_WORDS
-from role_assignment import word_similarity, skip_word, HERO, VILLAIN, VICTIM
-from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
+from role_assignment import similarity_to_role, skip_word, HERO, VILLAIN, VICTIM
 
 
 def process_file(filename, dic):
@@ -18,18 +16,9 @@ def process_file(filename, dic):
             # Skip comments, words ignored for analysis, and words already in dic
             if word[0] != '#' and not skip_word(word, None) and word not in dic:
                 scores = [0, 0, 0]
-                for hero_term in HERO_DICT:
-                    scores[HERO] += word_similarity(word, hero_term)
-                scores[HERO] /= len(HERO_DICT)
-
-                for victim_term in VICTIM_DICT:
-                    scores[VICTIM] += word_similarity(word, victim_term)
-                scores[VICTIM] /= len(VICTIM_DICT)
-
-                for villain_term in VILLAIN_DICT:
-                    scores[VILLAIN] += word_similarity(word, villain_term)
-                scores[VILLAIN] /= len(VILLAIN_DICT)
-
+                scores[HERO] = similarity_to_role(HERO)
+                scores[VILLAIN] = similarity_to_role(VILLAIN)
+                scores[VICTIM] = similarity_to_role(VICTIM)
                 dic[word] = scores
             # Print progress
             i += 1
@@ -51,4 +40,4 @@ dic = {}
 # 100k file: 'wiki-100k.txt'
 process_file('wiki-100k.txt', dic)
 process_file('google-10000-english-usa.txt', dic)
-write_results('similarity_dictionary.py', dic)
+write_results('similarity_dictionary.py', dic)  # CHANGE THIS FOR FILTERED DICS (AND UPDATE DICS IN ROLE ASSIGNMENT)
