@@ -50,7 +50,7 @@ VILLAIN = 1
 VICTIM = 2
 
 nlp = spacy.load('en')
-
+SIM_DIC = {}
 
 def role_to_string(role):
     '''
@@ -112,16 +112,13 @@ def extract_by_newspaper(url):
 
 
 @lru_cache(maxsize=1000000)
-def word_similarity(word1, word2, word1_pos=None):
+def word_similarity(word1, word2):
     '''
     Returns the Wu-Palmer similarity between the given words.
     Values range between 0 (least similar) and 1 (most similar).
     Optional part of speech argument for word1 limits WordNet synsets.
     '''
-    if word1_pos is not None:
-        syns_w1 = wn.synsets(word1, pos=word1_pos)
-    else:
-        syns_w1 = wn.synsets(word1)
+    syns_w1 = wn.synsets(word1)
     syns_w2 = wn.synsets(word2)
     score = 0
     for w1 in syns_w1:
@@ -167,19 +164,23 @@ def choose_role(word):
         return [HERO, VILLAIN, VICTIM]
 
 
-def similarity_to_role(word, role, word_pos=None):
+def similarity_to_role(word, role):
     '''
     Returns the similarity of the word to the role. Optional part of speech
     argument to be passed along to WordNet.
     '''
     similarity_total = 0
     scores = SIM_DIC.get(word)
+    count_zero = 0
 
     if role == HERO:
         if scores is None:
             dict_length = len(HERO_DICT)
             for hero_term in HERO_DICT:
-                similarity_total += word_similarity(word, hero_term, word1_pos=word_pos)
+                cur_score = word_similarity(word, hero_term)
+                similarity_total += cur_score
+                if cur_score == 0:
+                    count_zero += 1
         else:
             return scores[HERO]
 
@@ -187,7 +188,10 @@ def similarity_to_role(word, role, word_pos=None):
         if scores is None:
             dict_length = len(VILLAIN_DICT)
             for villain_term in VILLAIN_DICT:
-                similarity_total += word_similarity(word, villain_term, word1_pos=word_pos)
+                cur_score = word_similarity(word, villain_term)
+                similarity_total += cur_score
+                if cur_score == 0:
+                    count_zero += 1
         else:
             return scores[VILLAIN]
 
@@ -195,11 +199,15 @@ def similarity_to_role(word, role, word_pos=None):
         if scores is None:
             dict_length = len(VICTIM_DICT)
             for victim_term in VICTIM_DICT:
-                similarity_total += word_similarity(word, victim_term, word1_pos=word_pos)
+                cur_score = word_similarity(word, victim_term)
+                similarity_total += cur_score
+                if cur_score == 0:
+                    count_zero += 1
         else:
             return scores[VICTIM]
-
-    return similarity_total / dict_length
+    if dict_length - count_zero == 0:
+        return 0
+    return similarity_total / (dict_length - count_zero)
 
 
 def skip_word(word, pos):
@@ -486,7 +494,7 @@ def main2(url):
             term_role = choose_role(word)
             scores = {}
             for role in term_role:
-                scores[role] = similarity_to_role(word, role, word_pos=get_wn_pos(pos))
+                scores[role] = similarity_to_role(word, role)
             for entity in entities_in_sent:
                 entity_index = entities.index(entity)
                 for role in term_role:
