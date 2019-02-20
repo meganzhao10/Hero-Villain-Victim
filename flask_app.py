@@ -17,7 +17,7 @@ def after_request(response):
 @app.route('/')
 def top_entities():
     url = request.args.get("url")
-    headline, article = role_assignment.extract_by_newsplease(url)
+    headline, article = role_assignment.extract_by_newspaper(url)
     top_entities = entity_recognition.get_top_entities(headline, article)
     top_entity_names = [entity.name for entity in top_entities]
     return jsonify(top_entity_names)
