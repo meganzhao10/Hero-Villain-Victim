@@ -16,9 +16,9 @@ def process_file(filename, dic):
             # Skip comments, words ignored for analysis, and words already in dic
             if word[0] != '#' and not skip_word(word, None) and word not in dic:
                 scores = [0, 0, 0]
-                scores[HERO] = similarity_to_role(HERO)
-                scores[VILLAIN] = similarity_to_role(VILLAIN)
-                scores[VICTIM] = similarity_to_role(VICTIM)
+                scores[HERO] = similarity_to_role(word, HERO)
+                scores[VILLAIN] = similarity_to_role(word, VILLAIN)
+                scores[VICTIM] = similarity_to_role(word, VICTIM)
                 dic[word] = scores
             # Print progress
             i += 1
