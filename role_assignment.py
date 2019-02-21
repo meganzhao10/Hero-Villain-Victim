@@ -7,20 +7,27 @@ from functools import lru_cache
 from similarity_dictionary import SIM_DIC
 import re
 
-#pip install -U spacy
-#python3 -m spacy download xx
+# pip install -U spacy
+# python3 -m spacy download xx
 import spacy
 
 # pip3 install textblob
 from textblob import TextBlob
 # pip3 install news-please
 # pip3 install newspaper3k
-#from newsplease import NewsPlease
+# from newsplease import NewsPlease
 from newspaper import Article
 # pip install beautifulsoup4
 # pip install lxml
 # pip install html5lib
-#from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
+
+
+''' UNCOMMENT CHUNK BELOW TO USE FILTERED DICTIONARIES '''
+# from similarity_dictionary_filtered import SIM_DIC
+# HERO_DICT = {'gentle', 'preserving', 'leadership', 'amazing', 'devoted', 'humble', 'warned', 'surprised', 'humanity', 'brave', 'evacuate', 'redemption', 'smile', 'honor', 'revolutionize', 'leader', 'advocate', 'savior', 'charity', 'sympathies', 'kindness', 'good', 'protect', 'teach', 'reputation', 'respected', 'welfare', 'glory', 'victory', 'winner', 'well', 'contained', 'restoration', 'commitment', 'ability', 'efforts', 'inspire', 'safety', 'allies', 'health', 'strength', 'empowered', 'passion', 'encouraging', 'warm', 'vision', 'scored', 'authorities', 'justice', 'grand', 'admire', 'reshape', 'communities', 'response', 'strengthen', 'bolster', 'intervened', 'motivated', 'reconstruct', 'freedom', 'duty', 'aided', 'conquer', 'smart', 'bravery', 'improve', 'donate', 'wise', 'ingenuity', 'milestone', 'protections', 'expand', 'hero', 'pursuit', 'invent', 'containment', 'achievement', 'supporters'}
+# VILLAIN_DICT = {'contaminate', 'dirty', 'abduct', 'terror', 'worsen', 'crisis', 'lambast', 'abandonment', 'harass', 'subvert', 'virus', 'crime', 'provoke', 'kidnap', 'manipulate', 'alleged', 'refusal', 'trafficking', 'marginalize', 'conformity', 'clampdown', 'villain', 'disparaged', 'cold', 'exacerbate', 'alienate', 'commit', 'trial', 'violence', 'denounced', 'stripped', 'undermine', 'seize', 'persecuted', 'opposing', 'intimidate', 'jailed', 'fool', 'investigation', 'imprisoned', 'bias', 'deception', 'gunshots', 'threaten', 'hoax', 'engulfed', 'blame', 'eruption', 'offensive', 'contempt', 'suggested', 'coercion', 'erase', 'catastrophe', 'rumors', 'weaken', 'pointed', 'treason', 'evil', 'abused', 'sentenced', 'bullet', 'warn', 'devastate', 'convicted', 'rebuke', 'reveal', 'bully', 'collude'}
+# VICTIM_DICT = {'setback', 'injured', 'traumatized', 'prevented', 'healing', 'buried', 'stuck', 'anguished', 'flee', 'suffer', 'casualty', 'trampled', 'forsaken', 'harassed', 'harassment', 'hardship', 'deported', 'howling', 'shocked', 'violence', 'depressed', 'danger', 'mute', 'stripped', 'terrified', 'distrust', 'assassinated', 'shivering', 'sick', 'complain', 'abducted', 'huddled', 'victimized', 'persecuted', 'barricaded', 'devastated', 'kidnapped', 'seized', 'justified', 'evacuated', 'surrendered', 'diagnosed', 'imprisoned', 'independence', 'slave', 'deceased', 'rebuffed', 'target', 'trapped', 'screamed', 'loss', 'trafficked', 'humiliated', 'impairment', 'wounded', 'discriminated', 'disadvantaged', 'blood', 'offended', 'accuses', 'saddens', 'threatened', 'disaster', 'devastation', 'overshadowed', 'tortured', 'abused', 'remonstrated', 'jeopardizing', 'stabbed', 'prey', 'sentenced', 'challenged', 'renounced', 'scared', 'humiliation', 'deaths', 'rescued', 'bleeding'}
 
 
 # Parts of speech that are invalid in WordNet similarity function
@@ -50,6 +57,7 @@ VILLAIN = 1
 VICTIM = 2
 
 nlp = spacy.load('en')
+
 
 def role_to_string(role):
     '''
@@ -92,20 +100,20 @@ def extract_by_newspaper(url):
     return headline, article
 
 
-#def extract_by_newsplease(url):
- #   content = NewsPlease.from_url(url)
+# def extract_by_newsplease(url):
+#    content = NewsPlease.from_url(url)
 #    headline = content.title
 #    article = content.text
 #    return headline, article
 
 
-#def extract_by_soup(url):
+# def extract_by_soup(url):
 #    content = BeautifulSoup(url, "lxml")
 #    headline = content.title.string
 #    articleList = list()
 #    for i in content.find_all("p"):
 #        articleList.append(i.get_text())
-        # print(i.get_text())
+#        print(i.get_text())
 
 #    return headline, articleList  # TODO modify output so article is string
 
@@ -276,10 +284,10 @@ def active_passive_role(entity_index, aSentence):
     Active roles = subject or passive object
     Passive roles = object or passive subject
     '''
-    aSent=nlp(aSentence)
+    aSent = nlp(aSentence)
     for i, tok in enumerate(aSent):
         if (i == entity_index):
-            #print(str(tok) + ": " + str(tok.dep_))
+            # print(str(tok) + ": " + str(tok.dep_))
             if (tok.dep_ == "nsubj" or tok.dep_ == "pobj"):
                 role = "active"
                 return role
@@ -287,10 +295,10 @@ def active_passive_role(entity_index, aSentence):
                 role = "passive"
                 return role
             else:
-                role="neutral"
+                role = "neutral"
                 return role
 #        else:
-    role= "notInSentence"
+    role = "notInSentence"
     return role
 
 
@@ -344,12 +352,14 @@ def get_top_words(word_dic):
         result.append((word, word_dic[word]))
     return result
 
+
 def additional_score(actPas, role, word):
     if actPas == "active" and (role == HERO or role == VILLAIN):
         return 0.1
     if actPas == "passive" and role == VICTIM:
         return 0.1
     return 0
+
 
 def main2(url):
     headline, article = extract_by_newspaper(url)
