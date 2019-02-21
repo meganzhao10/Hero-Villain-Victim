@@ -9,14 +9,14 @@ import re
 
 #pip install -U spacy
 #python3 -m spacy download xx
-import spacy
+# import spacy
 
 # pip3 install textblob
 from textblob import TextBlob
 # pip3 install news-please
 # pip3 install newspaper3k
 #from newsplease import NewsPlease
-from newspaper import Article
+# from newspaper import Article
 # pip install beautifulsoup4
 # pip install lxml
 # pip install html5lib
@@ -49,7 +49,8 @@ HERO = 0
 VILLAIN = 1
 VICTIM = 2
 
-nlp = spacy.load('en')
+# nlp = spacy.load('en')
+nlp = 0
 SIM_DIC = {}
 
 def role_to_string(role):
@@ -465,7 +466,7 @@ def main2(url):
         # Skip sentence if no entities in it
         if not entities_in_sent:
             continue
-            
+
         entities_act_pas = []
         for entity in entities_in_sent:
             first_occurence = entity.locations[sentence_index][0]
