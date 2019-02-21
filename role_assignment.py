@@ -9,14 +9,14 @@ import re
 
 #pip install -U spacy
 #python3 -m spacy download xx
-# import spacy
+import spacy
 
 # pip3 install textblob
 from textblob import TextBlob
 # pip3 install news-please
 # pip3 install newspaper3k
 #from newsplease import NewsPlease
-# from newspaper import Article
+from newspaper import Article
 # pip install beautifulsoup4
 # pip install lxml
 # pip install html5lib
@@ -49,9 +49,7 @@ HERO = 0
 VILLAIN = 1
 VICTIM = 2
 
-# nlp = spacy.load('en')
-nlp = 0
-SIM_DIC = {}
+nlp = spacy.load('en')
 
 def role_to_string(role):
     '''
