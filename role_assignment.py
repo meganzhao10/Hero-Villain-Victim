@@ -353,15 +353,15 @@ def get_top_words(word_dic):
     return result
 
 
-def additional_score(actPas, role, word):
-    if actPas == "active" and (role == HERO or role == VILLAIN):
-        return 0.1
-    if actPas == "passive" and role == VICTIM:
-        return 0.1
+def additional_score(act_pas, role, score):
+    if act_pas == "active" and (role == HERO or role == VILLAIN):
+        return score
+    if act_pas == "passive" and role == VICTIM:
+        return score
     return 0
 
 
-def main2(url):
+def main2(url, add_score, decay_factor):
     headline, article = extract_by_newspaper(url)
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
@@ -508,9 +508,9 @@ def main2(url):
                 entity_index = entities.index(entity)
                 for role in term_role:
                     cur_score = scores[role]
-                    actPas = entities_act_pas[entities_in_sent.index(entity)]
-                    cur_score += additional_score(actPas, role, word)
-                    cur_score *= decay_function(0.5, entity.locations[sentence_index], i)  # TODO update f value
+                    act_pas = entities_act_pas[entities_in_sent.index(entity)]
+                    cur_score += additional_score(act_pas, role, add_score)
+                    cur_score *= decay_function(decay_factor, entity.locations[sentence_index], i)  # TODO update f value
                     if role == HERO:
                         hero_scores[entity_index] += cur_score
                         if word in top_hero_words[entity_index]:
@@ -554,4 +554,6 @@ def main2(url):
 
 
 if __name__ == "__main__":
-    main2("https://www.washingtonpost.com/politics/2019/02/18/roger-stone-deletes-photo-judge-presiding-over-his-case-says-he-didnt-mean-threaten-her/")
+    main2("https://www.washingtonpost.com/politics/2019/02/18/roger-stone-deletes-photo-judge-presiding-over-his-case-says-he-didnt-mean-threaten-her/",
+          0.1, 0.5,
+          )
