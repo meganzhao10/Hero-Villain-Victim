@@ -7,20 +7,27 @@ from functools import lru_cache
 from similarity_dictionary import SIM_DIC
 import re
 
-#pip install -U spacy
-#python3 -m spacy download xx
+# pip install -U spacy
+# python3 -m spacy download xx
 import spacy
 
 # pip3 install textblob
 from textblob import TextBlob
 # pip3 install news-please
 # pip3 install newspaper3k
-#from newsplease import NewsPlease
+# from newsplease import NewsPlease
 from newspaper import Article
 # pip install beautifulsoup4
 # pip install lxml
 # pip install html5lib
-#from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
+
+
+''' UNCOMMENT CHUNK BELOW TO USE FILTERED DICTIONARIES '''
+# from similarity_dictionary_filtered import SIM_DIC
+# HERO_DICT = {'gentle', 'preserving', 'leadership', 'amazing', 'devoted', 'humble', 'warned', 'surprised', 'humanity', 'brave', 'evacuate', 'redemption', 'smile', 'honor', 'revolutionize', 'leader', 'advocate', 'savior', 'charity', 'sympathies', 'kindness', 'good', 'protect', 'teach', 'reputation', 'respected', 'welfare', 'glory', 'victory', 'winner', 'well', 'contained', 'restoration', 'commitment', 'ability', 'efforts', 'inspire', 'safety', 'allies', 'health', 'strength', 'empowered', 'passion', 'encouraging', 'warm', 'vision', 'scored', 'authorities', 'justice', 'grand', 'admire', 'reshape', 'communities', 'response', 'strengthen', 'bolster', 'intervened', 'motivated', 'reconstruct', 'freedom', 'duty', 'aided', 'conquer', 'smart', 'bravery', 'improve', 'donate', 'wise', 'ingenuity', 'milestone', 'protections', 'expand', 'hero', 'pursuit', 'invent', 'containment', 'achievement', 'supporters'}
+# VILLAIN_DICT = {'contaminate', 'dirty', 'abduct', 'terror', 'worsen', 'crisis', 'lambast', 'abandonment', 'harass', 'subvert', 'virus', 'crime', 'provoke', 'kidnap', 'manipulate', 'alleged', 'refusal', 'trafficking', 'marginalize', 'conformity', 'clampdown', 'villain', 'disparaged', 'cold', 'exacerbate', 'alienate', 'commit', 'trial', 'violence', 'denounced', 'stripped', 'undermine', 'seize', 'persecuted', 'opposing', 'intimidate', 'jailed', 'fool', 'investigation', 'imprisoned', 'bias', 'deception', 'gunshots', 'threaten', 'hoax', 'engulfed', 'blame', 'eruption', 'offensive', 'contempt', 'suggested', 'coercion', 'erase', 'catastrophe', 'rumors', 'weaken', 'pointed', 'treason', 'evil', 'abused', 'sentenced', 'bullet', 'warn', 'devastate', 'convicted', 'rebuke', 'reveal', 'bully', 'collude'}
+# VICTIM_DICT = {'setback', 'injured', 'traumatized', 'prevented', 'healing', 'buried', 'stuck', 'anguished', 'flee', 'suffer', 'casualty', 'trampled', 'forsaken', 'harassed', 'harassment', 'hardship', 'deported', 'howling', 'shocked', 'violence', 'depressed', 'danger', 'mute', 'stripped', 'terrified', 'distrust', 'assassinated', 'shivering', 'sick', 'complain', 'abducted', 'huddled', 'victimized', 'persecuted', 'barricaded', 'devastated', 'kidnapped', 'seized', 'justified', 'evacuated', 'surrendered', 'diagnosed', 'imprisoned', 'independence', 'slave', 'deceased', 'rebuffed', 'target', 'trapped', 'screamed', 'loss', 'trafficked', 'humiliated', 'impairment', 'wounded', 'discriminated', 'disadvantaged', 'blood', 'offended', 'accuses', 'saddens', 'threatened', 'disaster', 'devastation', 'overshadowed', 'tortured', 'abused', 'remonstrated', 'jeopardizing', 'stabbed', 'prey', 'sentenced', 'challenged', 'renounced', 'scared', 'humiliation', 'deaths', 'rescued', 'bleeding'}
 
 
 # Parts of speech that are invalid in WordNet similarity function
@@ -93,20 +100,20 @@ def extract_by_newspaper(url):
     return headline, article
 
 
-#def extract_by_newsplease(url):
- #   content = NewsPlease.from_url(url)
+# def extract_by_newsplease(url):
+#    content = NewsPlease.from_url(url)
 #    headline = content.title
 #    article = content.text
 #    return headline, article
 
 
-#def extract_by_soup(url):
+# def extract_by_soup(url):
 #    content = BeautifulSoup(url, "lxml")
 #    headline = content.title.string
 #    articleList = list()
 #    for i in content.find_all("p"):
 #        articleList.append(i.get_text())
-        # print(i.get_text())
+#        print(i.get_text())
 
 #    return headline, articleList  # TODO modify output so article is string
 
@@ -117,10 +124,7 @@ def word_similarity(word1, word2, word1_pos=None):
     Values range between 0 (least similar) and 1 (most similar).
     Optional part of speech argument for word1 limits WordNet synsets.
     '''
-    if word1_pos is not None:
-        syns_w1 = wn.synsets(word1, pos=word1_pos)
-    else:
-        syns_w1 = wn.synsets(word1)
+    syns_w1 = wn.synsets(word1)
     syns_w2 = wn.synsets(word2)
     score = 0
     for w1 in syns_w1:
@@ -173,12 +177,16 @@ def similarity_to_role(word, role, word_pos=None):
     '''
     similarity_total = 0
     scores = SIM_DIC.get(word)
+    count_zero = 0
 
     if role == HERO:
         if scores is None:
             dict_length = len(HERO_DICT)
             for hero_term in HERO_DICT:
-                similarity_total += word_similarity(word, hero_term, word1_pos=word_pos)
+                cur_score = word_similarity(word, hero_term)
+                similarity_total += cur_score
+                if cur_score == 0:
+                    count_zero += 1
         else:
             return scores[HERO]
 
@@ -186,7 +194,10 @@ def similarity_to_role(word, role, word_pos=None):
         if scores is None:
             dict_length = len(VILLAIN_DICT)
             for villain_term in VILLAIN_DICT:
-                similarity_total += word_similarity(word, villain_term, word1_pos=word_pos)
+                cur_score = word_similarity(word, villain_term)
+                similarity_total += cur_score
+                if cur_score == 0:
+                    count_zero += 1
         else:
             return scores[VILLAIN]
 
@@ -194,11 +205,15 @@ def similarity_to_role(word, role, word_pos=None):
         if scores is None:
             dict_length = len(VICTIM_DICT)
             for victim_term in VICTIM_DICT:
-                similarity_total += word_similarity(word, victim_term, word1_pos=word_pos)
+                cur_score = word_similarity(word, victim_term)
+                similarity_total += cur_score
+                if cur_score == 0:
+                    count_zero += 1
         else:
             return scores[VICTIM]
-
-    return similarity_total / dict_length
+    if dict_length - count_zero == 0:
+        return 0
+    return similarity_total / (dict_length - count_zero)
 
 
 def skip_word(word, pos):
@@ -279,10 +294,10 @@ def active_passive_role(entity_index, aSentence):
                 role = "passive"
                 return role
             else:
-                role="neutral"
+                role = "neutral"
                 return role
 #        else:
-    role= "notInSentence"
+    role = "notInSentence"
     return role
 
 
@@ -343,7 +358,15 @@ def additional_score(actPas, role, word):
         return 0.1
     return 0
 
-def main2(url):
+def additional_score(act_pas, role, score):
+    if act_pas == "active" and (role == HERO or role == VILLAIN):
+        return score
+    if act_pas == "passive" and role == VICTIM:
+        return score
+    return 0
+
+
+def main2(url, add_score, decay_factor):
     headline, article = extract_by_newspaper(url)
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
@@ -485,14 +508,14 @@ def main2(url):
             term_role = choose_role(word)
             scores = {}
             for role in term_role:
-                scores[role] = similarity_to_role(word, role, word_pos=get_wn_pos(pos))
+                scores[role] = similarity_to_role(word, role)
             for entity in entities_in_sent:
                 entity_index = entities.index(entity)
                 for role in term_role:
                     cur_score = scores[role]
-                    actPas = entities_act_pas[entities_in_sent.index(entity)]
-                    # cur_score += additional_score(actPas, role, word)
-                    cur_score *= decay_function(0.5, entity.locations[sentence_index], i)  # TODO update f value
+                    act_pas = entities_act_pas[entities_in_sent.index(entity)]
+                    cur_score += additional_score(act_pas, role, add_score)
+                    cur_score *= decay_function(decay_factor, entity.locations[sentence_index], i)  # TODO update f value
                     if role == HERO:
                         hero_scores[entity_index] += cur_score
                         if word in top_hero_words[entity_index]:
@@ -536,4 +559,6 @@ def main2(url):
 
 
 if __name__ == "__main__":
-    main2("https://www.inquisitr.com/5278974/nick-sandmanns-attorney-to-file-lawsuits-against-media-organizations-for-their-portrayal-of-covington-teen/")
+    main2("https://www.washingtonpost.com/politics/2019/02/18/roger-stone-deletes-photo-judge-presiding-over-his-case-says-he-didnt-mean-threaten-her/",
+          0.1, 0.5,
+          )
