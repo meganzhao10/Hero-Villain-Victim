@@ -277,7 +277,7 @@ def entity_role_score(entity, role, article):
     return total_score / count
 
 
-def active_passive_role(entity_index, aSentence):
+def active_passive_role(entity_string, aSentence):
     '''
     Determine whether the entity is an active or passive role
     depending on if it's subject or object in a sentence
@@ -285,9 +285,8 @@ def active_passive_role(entity_index, aSentence):
     Passive roles = object or passive subject
     '''
     aSent = nlp(aSentence)
-    for i, tok in enumerate(aSent):
-        if (i == entity_index):
-            # print(str(tok) + ": " + str(tok.dep_))
+    for tok in aSent:
+        if (str(tok) == entity_string):
             if (tok.dep_ == "nsubj" or tok.dep_ == "pobj"):
                 role = "active"
                 return role
@@ -297,9 +296,7 @@ def active_passive_role(entity_index, aSentence):
             else:
                 role = "neutral"
                 return role
-#        else:
-    role = "notInSentence"
-    return role
+    return "notInSentence"
 
 
 def main(url):
@@ -475,26 +472,26 @@ def main2(url, add_score, decay_factor):
         if not entities_in_sent:
             continue
 
+        sentence = tokenized_article[sentence_index].strip()
+        tokenized_sentence = word_tokenize(sentence)
+
+        # Compute active/passive for each entity in sentence
         entities_act_pas = []
         for entity in entities_in_sent:
-            first_occurence = entity.locations[sentence_index][0]
-            if isinstance(first_occurence, int):
-                index = first_occurence
-            else:
-                index = first_occurence[1]
-            entities_act_pas.append(active_passive_role(index, tokenized_article[sentence_index].strip()))
+            loc = entity.locations[sentence_index]
+            entity_string = tokenized_sentence[loc[-1]]  # Use last index of entity
+            entities_act_pas.append(active_passive_role(entity_string, sentence))
 
         # Loop through words in sentence
-        sentence = word_tokenize(tokenized_article[sentence_index].strip())
-        for i in range(len(sentence)):
+        for i in range(len(tokenized_sentence)):
 
             # Skip word if it is part of an entity
             if is_word_part_of_entity(entities_in_sent, sentence_index, i):
                 continue
 
             # Check if word is a skip word (stop words, invalid POS, punctuation)
-            tagged_sentence = pos_tag(sentence)
-            word = sentence[i]
+            tagged_sentence = pos_tag(tokenized_sentence)
+            word = tokenized_sentence[i]
             pos = tagged_sentence[i][1]
             if skip_word(word, pos):
                 continue
@@ -555,5 +552,5 @@ def main2(url, add_score, decay_factor):
 
 if __name__ == "__main__":
     main2("https://www.washingtonpost.com/politics/2019/02/18/roger-stone-deletes-photo-judge-presiding-over-his-case-says-he-didnt-mean-threaten-her/",
-          0.1, 0.5,
+          0.2, 0.1,  # additional score, decay factor
           )
