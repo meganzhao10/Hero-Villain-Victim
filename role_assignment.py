@@ -56,7 +56,7 @@ HERO = 0
 VILLAIN = 1
 VICTIM = 2
 
-nlp = spacy.load('en')
+nlp = spacy.load('en_core_web_lg')
 
 
 def role_to_string(role):
@@ -118,8 +118,7 @@ def extract_by_newspaper(url):
 #    return headline, articleList  # TODO modify output so article is string
 
 
-@lru_cache(maxsize=1000000)
-def word_similarity(word1, word2):
+def word_similarity(word1, word2, word1_pos=None):
     '''
     Returns the Wu-Palmer similarity between the given words.
     Values range between 0 (least similar) and 1 (most similar).
@@ -170,8 +169,8 @@ def choose_role(word):
     else:
         return [HERO, VILLAIN, VICTIM]
 
-
-def similarity_to_role(word, role):
+@lru_cache(maxsize=1000000)
+def similarity_to_role(word, role, word_pos=None):
     '''
     Returns the similarity of the word to the role. Optional part of speech
     argument to be passed along to WordNet.
@@ -349,6 +348,12 @@ def get_top_words(word_dic):
         result.append((word, word_dic[word]))
     return result
 
+def additional_score(actPas, role, word):
+    if actPas == "active" and (role == HERO or role == VILLAIN):
+        return 0.1
+    if actPas == "passive" and role == VICTIM:
+        return 0.1
+    return 0
 
 def additional_score(act_pas, role, score):
     if act_pas == "active" and (role == HERO or role == VILLAIN):
