@@ -56,7 +56,7 @@ HERO = 0
 VILLAIN = 1
 VICTIM = 2
 
-nlp = spacy.load('en')
+nlp = spacy.load('en_core_web_lg')
 
 
 def role_to_string(role):
@@ -118,8 +118,7 @@ def extract_by_newspaper(url):
 #    return headline, articleList  # TODO modify output so article is string
 
 
-@lru_cache(maxsize=1000000)
-def word_similarity(word1, word2):
+def word_similarity(word1, word2, word1_pos=None):
     '''
     Returns the Wu-Palmer similarity between the given words.
     Values range between 0 (least similar) and 1 (most similar).
@@ -170,8 +169,8 @@ def choose_role(word):
     else:
         return [HERO, VILLAIN, VICTIM]
 
-
-def similarity_to_role(word, role):
+@lru_cache(maxsize=1000000)
+def similarity_to_role(word, role, word_pos=None):
     '''
     Returns the similarity of the word to the role. Optional part of speech
     argument to be passed along to WordNet.
@@ -327,19 +326,28 @@ def entity_role_score(entity, role, article):
     return total_score / count
 
 
-def active_passive_role(entity_index, aSentence):
+def active_passive_role(entity_string, aSentence):
     '''
     Determine whether the entity is an active or passive role
     depending on if it's subject or object in a sentence
     Active roles = subject or passive object
     Passive roles = object or passive subject
     '''
-    aSent = nlp(aSentence)
-    for i, tok in enumerate(aSent):
-        if (i == entity_index):
-            # print(str(tok) + ": " + str(tok.dep_))
-            if (tok.dep_ == "nsubj" or tok.dep_ == "pobj"):
+    aSent=nlp(aSentence)
+    isActive = False
+    for tok in aSent:
+        if (tok.dep_=="nsubj"):
+            isActive = True
+        if (str(tok) == entity_string):
+            #print(str(tok) + ": " + str(tok.dep_))
+            if (tok.dep_ == "nsubj" ):
                 role = "active"
+                return role
+            if (tok.dep_ == "pobj" and isActive==False):
+                role = "active"
+                return role
+            if (tok.dep_ == "pobj" and isActive==True):
+                role = "passive"
                 return role
             elif (tok.dep_ == "dobj" or tok.dep_ == "nsubjpass"):
                 role = "passive"
@@ -347,8 +355,7 @@ def active_passive_role(entity_index, aSentence):
             else:
                 role = "neutral"
                 return role
-#        else:
-    role = "notInSentence"
+    role= "notInSentence"
     return role
 
 
@@ -402,6 +409,12 @@ def get_top_words(word_dic):
         result.append((word, word_dic[word]))
     return result
 
+def additional_score(actPas, role, word):
+    if actPas == "active" and (role == HERO or role == VILLAIN):
+        return 0.1
+    if actPas == "passive" and role == VICTIM:
+        return 0.1
+    return 0
 
 def additional_score(act_pas, role, score):
     if act_pas == "active" and (role == HERO or role == VILLAIN):
@@ -413,6 +426,8 @@ def additional_score(act_pas, role, score):
 
 def main2(url, add_score, decay_factor):
     headline, article = extract_by_newspaper(url)
+#    print(headline)
+#    print(article)
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
 
@@ -525,26 +540,26 @@ def main2(url, add_score, decay_factor):
         if not entities_in_sent:
             continue
 
+        sentence = tokenized_article[sentence_index].strip()
+        tokenized_sentence = word_tokenize(sentence)
+
+        # Compute active/passive for each entity in sentence
         entities_act_pas = []
         for entity in entities_in_sent:
-            first_occurence = entity.locations[sentence_index][0]
-            if isinstance(first_occurence, int):
-                index = first_occurence
-            else:
-                index = first_occurence[1]
-            entities_act_pas.append(active_passive_role(index, tokenized_article[sentence_index].strip()))
+            loc = entity.locations[sentence_index]
+            entity_string = tokenized_sentence[loc[-1]]  # Use last index of entity
+            entities_act_pas.append(active_passive_role(entity_string, sentence))
 
         # Loop through words in sentence
-        sentence = word_tokenize(tokenized_article[sentence_index].strip())
-        for i in range(len(sentence)):
+        for i in range(len(tokenized_sentence)):
 
             # Skip word if it is part of an entity
             if is_word_part_of_entity(entities_in_sent, sentence_index, i):
                 continue
 
             # Check if word is a skip word (stop words, invalid POS, punctuation)
-            tagged_sentence = pos_tag(sentence)
-            word = sentence[i]
+            tagged_sentence = pos_tag(tokenized_sentence)
+            word = tokenized_sentence[i]
             pos = tagged_sentence[i][1]
             if skip_word(word, pos):
                 continue
@@ -601,9 +616,22 @@ def main2(url, add_score, decay_factor):
         # print(entity.role)
 
         print("------------------------")
+        
+
+def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_score):
+    maxScore = max(hero_score, villian_score, victim_score)
+    if maxScore == hero_score:
+        role = "Hero"
+    if maxScore == villian_score:
+        role = "Villian"
+    if maxScore == victim_score:
+        role = "Victim"
+    return role
+
+#create a data structure that has dic entity name, role,  top words, 
 
 
 if __name__ == "__main__":
     main2("https://www.washingtonpost.com/politics/2019/02/18/roger-stone-deletes-photo-judge-presiding-over-his-case-says-he-didnt-mean-threaten-her/",
-          0.1, 0.5,
+          0.2, 0.1,  # additional score, decay factor
           )
