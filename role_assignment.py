@@ -262,7 +262,7 @@ def entity_role_score(entity, role, article):
     return total_score / count
 
 
-def active_passive_role(entity_index, aSentence):
+def active_passive_role(entity_string, aSentence):
     '''
     Determine whether the entity is an active or passive role
     depending on if it's subject or object in a sentence
@@ -270,11 +270,22 @@ def active_passive_role(entity_index, aSentence):
     Passive roles = object or passive subject
     '''
     aSent=nlp(aSentence)
-    for i, tok in enumerate(aSent):
-        if (i == entity_index):
+    isActive = False
+    for tok in aSent:
+        if (tok.dep_=="nsubj"):
+            isActive = True
+        #print(str(tok) + ": " + str(tok.dep_))
+        #print (isActive)
+        if (str(tok) == entity_string):
             #print(str(tok) + ": " + str(tok.dep_))
-            if (tok.dep_ == "nsubj" or tok.dep_ == "pobj"):
+            if (tok.dep_ == "nsubj" ):
                 role = "active"
+                return role
+            if (tok.dep_ == "pobj" and isActive==False):
+                role = "active"
+                return role
+            if (tok.dep_ == "pobj" and isActive==True):
+                role = "passive"
                 return role
             elif (tok.dep_ == "dobj" or tok.dep_ == "nsubjpass"):
                 role = "passive"
@@ -284,6 +295,7 @@ def active_passive_role(entity_index, aSentence):
                 return role
 #        else:
     role= "notInSentence"
+    
     return role
 
 
@@ -346,6 +358,8 @@ def additional_score(actPas, role, word):
 
 def main2(url):
     headline, article = extract_by_newspaper(url)
+#    print(headline)
+#    print(article)
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
 
@@ -534,7 +548,20 @@ def main2(url):
         # print(entity.role)
 
         print("------------------------")
+        
+
+def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_score):
+    maxScore = max(hero_score, villian_score, victim_score)
+    if maxScore == hero_score:
+        role = "Hero"
+    if maxScore == villian_score:
+        role = "Villian"
+    if maxScore == victim_score:
+        role = "Victim"
+    return role
+
+#create a data structure that has dic entity name, role,  top words, 
 
 
 if __name__ == "__main__":
-    main2("https://www.washingtonpost.com/politics/2019/02/18/roger-stone-deletes-photo-judge-presiding-over-his-case-says-he-didnt-mean-threaten-her/")
+    main2("https://www.bbc.com/news/world-middle-east-47306633")
