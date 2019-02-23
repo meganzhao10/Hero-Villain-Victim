@@ -288,7 +288,6 @@ def active_passive_role(entity_string, aSentence):
     for tok in aSent:
         if (tok.dep_=="nsubj"):
             isActive = True
-
         if (str(tok) == entity_string):
             #print(str(tok) + ": " + str(tok.dep_))
             if (tok.dep_ == "nsubj" ):
