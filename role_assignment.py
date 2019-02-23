@@ -284,11 +284,21 @@ def active_passive_role(entity_string, aSentence):
     Active roles = subject or passive object
     Passive roles = object or passive subject
     '''
-    aSent = nlp(aSentence)
+    aSent=nlp(aSentence)
+    isActive = False
     for tok in aSent:
+        if (tok.dep_=="nsubj"):
+            isActive = True
         if (str(tok) == entity_string):
-            if (tok.dep_ == "nsubj" or tok.dep_ == "pobj"):
+            #print(str(tok) + ": " + str(tok.dep_))
+            if (tok.dep_ == "nsubj" ):
                 role = "active"
+                return role
+            if (tok.dep_ == "pobj" and isActive==False):
+                role = "active"
+                return role
+            if (tok.dep_ == "pobj" and isActive==True):
+                role = "passive"
                 return role
             elif (tok.dep_ == "dobj" or tok.dep_ == "nsubjpass"):
                 role = "passive"
@@ -296,7 +306,8 @@ def active_passive_role(entity_string, aSentence):
             else:
                 role = "neutral"
                 return role
-    return "notInSentence"
+    role= "notInSentence"
+    return role
 
 
 def main(url):
@@ -360,6 +371,8 @@ def additional_score(act_pas, role, score):
 
 def main2(url, add_score, decay_factor):
     headline, article = extract_by_newspaper(url)
+#    print(headline)
+#    print(article)
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
 
@@ -548,6 +561,19 @@ def main2(url, add_score, decay_factor):
         # print(entity.role)
 
         print("------------------------")
+        
+
+def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_score):
+    maxScore = max(hero_score, villian_score, victim_score)
+    if maxScore == hero_score:
+        role = "Hero"
+    if maxScore == villian_score:
+        role = "Villian"
+    if maxScore == victim_score:
+        role = "Victim"
+    return role
+
+#create a data structure that has dic entity name, role,  top words, 
 
 
 if __name__ == "__main__":
