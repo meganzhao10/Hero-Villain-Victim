@@ -56,7 +56,7 @@ HERO = 0
 VILLAIN = 1
 VICTIM = 2
 
-nlp = spacy.load('en_core_web_lg')
+nlp = spacy.load('en')
 
 
 def role_to_string(role):
@@ -118,7 +118,7 @@ def extract_by_newspaper(url):
 #    return headline, articleList  # TODO modify output so article is string
 
 @lru_cache(maxsize=1000000)
-def word_similarity(word1, word2, word1_pos=None):
+def word_similarity(word1, word2):
     '''
     Returns the Wu-Palmer similarity between the given words.
     Values range between 0 (least similar) and 1 (most similar).
@@ -171,51 +171,47 @@ def choose_role(word):
 
 
 @lru_cache(maxsize=1000000)
-def similarity_to_role(word, role, word_pos=None):
+def similarity_to_role(word, role):
     '''
     Returns the similarity of the word to the role. Optional part of speech
     argument to be passed along to WordNet.
     '''
     similarity_total = 0
-    #scores = SIM_DIC.get(word)
+    scores = SIM_DIC.get(word)
     count_zero = 0
-    scores = None
 
-    if role == HERO:
-        if scores is None:
+    if scores:
+        score = scores[role]
+
+    else:
+        if role == HERO:
             dict_length = len(HERO_DICT)
             for hero_term in HERO_DICT:
                 cur_score = word_similarity(word, hero_term)
                 similarity_total += cur_score
                 if cur_score == 0:
                     count_zero += 1
-        else:
-            return scores[HERO]
 
-    elif role == VILLAIN:
-        if scores is None:
+        elif role == VILLAIN:
             dict_length = len(VILLAIN_DICT)
             for villain_term in VILLAIN_DICT:
                 cur_score = word_similarity(word, villain_term)
                 similarity_total += cur_score
                 if cur_score == 0:
                     count_zero += 1
-        else:
-            return scores[VILLAIN]
 
-    elif role == VICTIM:
-        if scores is None:
+        elif role == VICTIM:
             dict_length = len(VICTIM_DICT)
             for victim_term in VICTIM_DICT:
                 cur_score = word_similarity(word, victim_term)
                 similarity_total += cur_score
                 if cur_score == 0:
                     count_zero += 1
-        else:
-            return scores[VICTIM]
 
-    if dict_length - count_zero == 0:
-        return 0
+        if dict_length - count_zero == 0:
+            return 0  # TODO do we want to do something else here?
+
+        score = similarity_total / (dict_length - count_zero)  # Do we want to shift this to 0,1 interval??
 
     #full dictionary 10k
     # if role == HERO:
@@ -260,8 +256,6 @@ def similarity_to_role(word, role, word_pos=None):
     # else:
     #     avg = 0.1915
     #     std = 0.1581
-
-    score = similarity_total / (dict_length - count_zero)
     #return score
 
     return (score - avg) / std
@@ -306,7 +300,7 @@ def role_score_by_sentence(entity, role, index, tokenized_article):
             if not skip_word(word, pos):
                 term_role = choose_role(word)
                 if role in term_role:
-                    cur_score += similarity_to_role(word, role, word_pos=get_wn_pos(pos))
+                    cur_score += similarity_to_role(word, role)
                     # cur_score += additional_score(entity, role, word)
                     cur_score *= decay_function(0.2, entity_location, i)  # TODO update f value
         total_score += cur_score
