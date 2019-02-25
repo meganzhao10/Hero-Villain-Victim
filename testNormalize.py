@@ -2,8 +2,8 @@ from role_assignment import similarity_to_role as sim
 from role_assignment import HERO, VILLAIN, VICTIM
 from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 from role_assignment import skip_word
-#from similarity_dictionary import SIM_DIC
-from similarity_dictionary_filtered import SIM_DIC
+from similarity_dictionary import SIM_DIC
+#from similarity_dictionary_filtered import SIM_DIC
 import statistics
 
 std = [0] * 3
@@ -22,8 +22,8 @@ def process_file(filename, dic):
         scores = [0, 0, 0]
         i = 0
         line_number = 0
-        #for line in input_file:
-        for line in reversed(list(input_file)):
+        for line in input_file:
+        #for line in reversed(list(input_file)):
             word = line.strip()
             # Skip comments, words ignored for analysis, and words already in dic
             if word[0] != '#' and not skip_word(word, None):
@@ -43,8 +43,6 @@ def process_file(filename, dic):
                 i += 1
             # if i % 10000 == 0:
             #     print(i, "words read...")
-                if i == 10000:
-                    break
 
 
         print("DONE:", filename)
@@ -56,7 +54,7 @@ def process_file(filename, dic):
     return scores
 
 
-scores = process_file('google-10000-english-usa.txt', SIM_DIC)
+scores = process_file('wiki-100k.txt', SIM_DIC)
 
 print(scores)
 print(std)
@@ -64,18 +62,18 @@ print(std)
 
 '''
 10k
-Full dictionary : 
-[0.3170381831066183, 0.30221178162662615, 0.2967264665102774]
-[0.14937172486128053, 0.14617562716266508, 0.1436711117207142]
+c - Full dictionary : 
+[0.33984155119157283, 0.3239487422302778, 0.31806888895945695]
+[0.1271476844983633, 0.12594416854760865, 0.12384311388567634]
 
 c-Filtered dictionary: 
 [0.32305452392159195, 0.28782595388590715, 0.2901647892770812]
 [0.12396667686493487, 0.12025576023093629, 0.1194044117127747]
 
 100k
-Full
-[0.2158274427747022, 0.20612047710130232, 0.20331524277195787]
-[0.17967377106672355, 0.17359717803353836, 0.17129783040312827]
+c-Full
+[0.2228730761048522, 0.2128492289450024, 0.2099524184368569]
+[0.17820107241044436, 0.17227414652545192, 0.16999541836662138]
 
 c-Filtered
 [0.2099998821237115, 0.18763032197617394, 0.19157541508044423]

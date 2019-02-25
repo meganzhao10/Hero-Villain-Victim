@@ -4,7 +4,7 @@ from entity_recognition import get_top_entities
 from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 from stop_words import STOP_WORDS
 from functools import lru_cache
-#from similarity_dictionary import SIM_DIC
+from similarity_dictionary import SIM_DIC
 import re
 
 # pip install -U spacy
@@ -24,10 +24,10 @@ from newspaper import Article
 
 
 ''' UNCOMMENT CHUNK BELOW TO USE FILTERED DICTIONARIES '''
-from similarity_dictionary_filtered import SIM_DIC
-HERO_DICT = {'gentle', 'preserving', 'leadership', 'amazing', 'devoted', 'humble', 'warned', 'surprised', 'humanity', 'brave', 'evacuate', 'redemption', 'smile', 'honor', 'revolutionize', 'leader', 'advocate', 'savior', 'charity', 'sympathies', 'kindness', 'good', 'protect', 'teach', 'reputation', 'respected', 'welfare', 'glory', 'victory', 'winner', 'well', 'contained', 'restoration', 'commitment', 'ability', 'efforts', 'inspire', 'safety', 'allies', 'health', 'strength', 'empowered', 'passion', 'encouraging', 'warm', 'vision', 'scored', 'authorities', 'justice', 'grand', 'admire', 'reshape', 'communities', 'response', 'strengthen', 'bolster', 'intervened', 'motivated', 'reconstruct', 'freedom', 'duty', 'aided', 'conquer', 'smart', 'bravery', 'improve', 'donate', 'wise', 'ingenuity', 'milestone', 'protections', 'expand', 'hero', 'pursuit', 'invent', 'containment', 'achievement', 'supporters'}
-VILLAIN_DICT = {'contaminate', 'dirty', 'abduct', 'terror', 'worsen', 'crisis', 'lambast', 'abandonment', 'harass', 'subvert', 'virus', 'crime', 'provoke', 'kidnap', 'manipulate', 'alleged', 'refusal', 'trafficking', 'marginalize', 'conformity', 'clampdown', 'villain', 'disparaged', 'cold', 'exacerbate', 'alienate', 'commit', 'trial', 'violence', 'denounced', 'stripped', 'undermine', 'seize', 'persecuted', 'opposing', 'intimidate', 'jailed', 'fool', 'investigation', 'imprisoned', 'bias', 'deception', 'gunshots', 'threaten', 'hoax', 'engulfed', 'blame', 'eruption', 'offensive', 'contempt', 'suggested', 'coercion', 'erase', 'catastrophe', 'rumors', 'weaken', 'pointed', 'treason', 'evil', 'abused', 'sentenced', 'bullet', 'warn', 'devastate', 'convicted', 'rebuke', 'reveal', 'bully', 'collude'}
-VICTIM_DICT = {'setback', 'injured', 'traumatized', 'prevented', 'healing', 'buried', 'stuck', 'anguished', 'flee', 'suffer', 'casualty', 'trampled', 'forsaken', 'harassed', 'harassment', 'hardship', 'deported', 'howling', 'shocked', 'violence', 'depressed', 'danger', 'mute', 'stripped', 'terrified', 'distrust', 'assassinated', 'shivering', 'sick', 'complain', 'abducted', 'huddled', 'victimized', 'persecuted', 'barricaded', 'devastated', 'kidnapped', 'seized', 'justified', 'evacuated', 'surrendered', 'diagnosed', 'imprisoned', 'independence', 'slave', 'deceased', 'rebuffed', 'target', 'trapped', 'screamed', 'loss', 'trafficked', 'humiliated', 'impairment', 'wounded', 'discriminated', 'disadvantaged', 'blood', 'offended', 'accuses', 'saddens', 'threatened', 'disaster', 'devastation', 'overshadowed', 'tortured', 'abused', 'remonstrated', 'jeopardizing', 'stabbed', 'prey', 'sentenced', 'challenged', 'renounced', 'scared', 'humiliation', 'deaths', 'rescued', 'bleeding'}
+# from similarity_dictionary_filtered import SIM_DIC
+# HERO_DICT = {'gentle', 'preserving', 'leadership', 'amazing', 'devoted', 'humble', 'warned', 'surprised', 'humanity', 'brave', 'evacuate', 'redemption', 'smile', 'honor', 'revolutionize', 'leader', 'advocate', 'savior', 'charity', 'sympathies', 'kindness', 'good', 'protect', 'teach', 'reputation', 'respected', 'welfare', 'glory', 'victory', 'winner', 'well', 'contained', 'restoration', 'commitment', 'ability', 'efforts', 'inspire', 'safety', 'allies', 'health', 'strength', 'empowered', 'passion', 'encouraging', 'warm', 'vision', 'scored', 'authorities', 'justice', 'grand', 'admire', 'reshape', 'communities', 'response', 'strengthen', 'bolster', 'intervened', 'motivated', 'reconstruct', 'freedom', 'duty', 'aided', 'conquer', 'smart', 'bravery', 'improve', 'donate', 'wise', 'ingenuity', 'milestone', 'protections', 'expand', 'hero', 'pursuit', 'invent', 'containment', 'achievement', 'supporters'}
+# VILLAIN_DICT = {'contaminate', 'dirty', 'abduct', 'terror', 'worsen', 'crisis', 'lambast', 'abandonment', 'harass', 'subvert', 'virus', 'crime', 'provoke', 'kidnap', 'manipulate', 'alleged', 'refusal', 'trafficking', 'marginalize', 'conformity', 'clampdown', 'villain', 'disparaged', 'cold', 'exacerbate', 'alienate', 'commit', 'trial', 'violence', 'denounced', 'stripped', 'undermine', 'seize', 'persecuted', 'opposing', 'intimidate', 'jailed', 'fool', 'investigation', 'imprisoned', 'bias', 'deception', 'gunshots', 'threaten', 'hoax', 'engulfed', 'blame', 'eruption', 'offensive', 'contempt', 'suggested', 'coercion', 'erase', 'catastrophe', 'rumors', 'weaken', 'pointed', 'treason', 'evil', 'abused', 'sentenced', 'bullet', 'warn', 'devastate', 'convicted', 'rebuke', 'reveal', 'bully', 'collude'}
+# VICTIM_DICT = {'setback', 'injured', 'traumatized', 'prevented', 'healing', 'buried', 'stuck', 'anguished', 'flee', 'suffer', 'casualty', 'trampled', 'forsaken', 'harassed', 'harassment', 'hardship', 'deported', 'howling', 'shocked', 'violence', 'depressed', 'danger', 'mute', 'stripped', 'terrified', 'distrust', 'assassinated', 'shivering', 'sick', 'complain', 'abducted', 'huddled', 'victimized', 'persecuted', 'barricaded', 'devastated', 'kidnapped', 'seized', 'justified', 'evacuated', 'surrendered', 'diagnosed', 'imprisoned', 'independence', 'slave', 'deceased', 'rebuffed', 'target', 'trapped', 'screamed', 'loss', 'trafficked', 'humiliated', 'impairment', 'wounded', 'discriminated', 'disadvantaged', 'blood', 'offended', 'accuses', 'saddens', 'threatened', 'disaster', 'devastation', 'overshadowed', 'tortured', 'abused', 'remonstrated', 'jeopardizing', 'stabbed', 'prey', 'sentenced', 'challenged', 'renounced', 'scared', 'humiliation', 'deaths', 'rescued', 'bleeding'}
 
 
 # Parts of speech that are invalid in WordNet similarity function
@@ -214,37 +214,37 @@ def similarity_to_role(word, role):
         score = similarity_total / (dict_length - count_zero)  # Do we want to shift this to 0,1 interval??
 
     #full dictionary 10k
-    # if role == HERO:
-    #     avg = 0.3170
-    #     std = 0.1493
-    # elif role == VILLAIN:
-    #     avg = 0.3022
-    #     std = 0.1461
-    # else:
-    #     avg = 0.2967
-    #     std = 0.1436
+    if role == HERO:
+        avg = 0.3398
+        std = 0.1271
+    elif role == VILLAIN:
+        avg = 0.3239
+        std = 0.1259
+    else:
+        avg = 0.3180
+        std = 0.1238
 
     # full dictionary 100k
     # if role == HERO:
-    #     avg = 0.2158
-    #     std = 0.1796
+    #     avg = 0.2228
+    #     std = 0.1782
     # elif role == VILLAIN:
-    #     avg = 0.2061
-    #     std = 0.1735
+    #     avg = 0.2128
+    #     std = 0.1722
     # else:
-    #     avg = 0.2033
-    #     std = 0.1712
+    #     avg = 0.2099
+    #     std = 0.1699
 
     # filtered dictionary 10k
-    if role == HERO:
-        avg = 0.3230
-        std = 0.1239
-    elif role == VILLAIN:
-        avg = 0.2878
-        std = 0.1202
-    else:
-        avg = 0.2901
-        std = 0.1194
+    # if role == HERO:
+    #     avg = 0.3230
+    #     std = 0.1239
+    # elif role == VILLAIN:
+    #     avg = 0.2878
+    #     std = 0.1202
+    # else:
+    #     avg = 0.2901
+    #     std = 0.1194
 
     # filtered dictionary 100k
     # if role == HERO:
@@ -256,6 +256,7 @@ def similarity_to_role(word, role):
     # else:
     #     avg = 0.1915
     #     std = 0.1581
+    
     #return score
 
     return (score - avg) / std
@@ -581,10 +582,33 @@ def main2(url, add_score, decay_factor):
                             top_victim_words[entity_index][word] = cur_score
 
     # Compute total scores
+    entities_names_scores = [None, None, None]
+    top_words = [None, None, None]
     for i, entity in enumerate(entities):
         hero_score = hero_scores[i] / counts[i]
         villain_score = villain_scores[i] / counts[i]
         victim_score = victim_scores[i] / counts[i]
+
+        # algorithm to determine entity roles
+        entity.role = HERO
+        max_score = max(hero_score, villain_score, victim_score)
+        if villain_score == max_score:
+            entity.role = VILLAIN
+        elif victim_score == max_score:
+            entity.role = VICTIM
+
+        if not entities_names_scores[entity.role] or max_score > entities_names_scores[entity.role][1]:
+            entities_names_scores[entity.role] = (entity.name, max_score)
+
+            if entity.role == HERO:
+                top_words[HERO] = [x[0] for x in get_top_words(top_hero_words[i])]
+            elif entity.role == VILLAIN:
+                top_words[VILLAIN] = [x[0] for x in get_top_words(top_villain_words[i])]
+            else:
+                top_words[VICTIM] = [x[0] for x in get_top_words(top_victim_words[i])]
+
+        print(entities_names_scores)
+        print(top_words)
 
         print(entity)
         print("HERO:", hero_score)
@@ -599,6 +623,8 @@ def main2(url, add_score, decay_factor):
         # print(entity.role)
 
         print("------------------------")
+
+    return entities_names_scores, top_words
 
 
 def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_score):
@@ -615,6 +641,7 @@ def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_s
 
 
 if __name__ == "__main__":
-    main2("https://www.washingtonpost.com/politics/2019/02/18/roger-stone-deletes-photo-judge-presiding-over-his-case-says-he-didnt-mean-threaten-her/",
+    main2(
+"https://www.bbc.com/news/world-asia-india-47341941",
           0.2, 0.1,  # additional score, decay factor
           )

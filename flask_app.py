@@ -18,11 +18,18 @@ def after_request(response):
 @app.route('/')
 def top_entities():
     url = request.args.get("url")
-    headline, article = role_assignment.extract_by_newspaper(url)
-    tokenized_article = sent_tokenize(article)
-    top_entities = entity_recognition.get_top_entities(headline, tokenized_article)
-    top_entity_names = [entity.name for entity in top_entities]
-    return jsonify(top_entity_names)
+    # headline, article = role_assignment.extract_by_newspaper(url)
+    # tokenized_article = sent_tokenize(article)
+    # top_entities = entity_recognition.get_top_entities(headline, tokenized_article)
+    # top_entity_names = [entity.name for entity in top_entities]
+    # return jsonify(top_entity_names)
+    top_entity_names_scores, top_words = role_assignment.main2(url, 0.2, 0.1)
+    top_entity_names = ["None", "None", "None"]
+    for i in range(len(top_entity_names_scores)):
+        if top_entity_names_scores[i]:
+            top_entity_names[i] = top_entity_names_scores[i][0]
+
+    return jsonify(top_entity_names, top_words)
 
 
 if __name__ == '__main__':
