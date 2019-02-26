@@ -389,7 +389,6 @@ def is_word_part_of_entity(entities_in_sent, sentence_index, word_index):
             if isinstance(loc, int):
                 if word_index == loc:
                     return True
-            # TODO I think if an entity appears twice in a sentence then we need to do something different with locations
             elif loc[0] <= word_index <= loc[1]:
                     return True
     return False
@@ -592,16 +591,8 @@ def main2(url, add_score, decay_factor):
         tagged_sentence = pos_tag(tokenized_sentence)
         for i in range(len(tokenized_sentence)):
 
-            # Skip word if it is part of an entity
-            # if sentence_index == 0 and tokenized_sentence[i] == '2013':
-            #     print('-----------------------')
-            #     print("SENT IND", sentence_index)
-            #     print(tokenized_sentence)
-            #     print([e.name for e in entities_in_sent])
-            #     print([e.locations[sentence_index] for e in entities_in_sent])
-            #     print("WORD", tokenized_sentence[i], "INDEX", i)
+            # Skip words that are part of an entity
             if is_word_part_of_entity(entities_in_sent, sentence_index, i):
-                # print("SKIPPING WORD")
                 continue
 
             # Check if word is a skip word (stop words, invalid POS, punctuation)
