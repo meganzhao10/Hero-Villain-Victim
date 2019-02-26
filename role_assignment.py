@@ -374,9 +374,9 @@ def main(url):
     return entities
 
 
-def is_word_part_of_entity(entities_in_sent, sentence_index, word_index):
+def is_word_part_of_entity(entities_in_sent, sentence_index, word_index, headline):
     for entity in entities_in_sent:
-        if sentence_index == "H":
+        if headline:
             entity_location = entity.headline_locations
         else:
             entity_location = entity.locations[sentence_index]
@@ -415,6 +415,9 @@ def main2(url, add_score, decay_factor):
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
 
+    # Add headline as sentence to analyze
+    tokenized_article.append(headline)
+
     # Initialize scores, counts, top words (indexed by entities) for headline
     hero_scores, villain_scores, victim_scores = [], [], []
     top_hero_words, top_villain_words, top_victim_words = [], [], []
@@ -427,75 +430,6 @@ def main2(url, add_score, decay_factor):
         top_villain_words.append({})
         top_victim_words.append({})
         counts.append(0)
-
-    # Process headline
-#    entities_in_headline = []
-#    for i, entity in enumerate(entities):
-#        if entity.headline:
-#            counts[i] += 1
-#            entities_in_headline.append(entity)
-#
-#    if entities_in_headline:
-#        headline_tokens = word_tokenize(headline)
-#        for i, word in enumerate(headline_tokens):
-#            if skip_word(word, None) or is_word_part_of_entity(entities_in_headline, "H", i):
-#                continue
-#
-#            term_role = choose_role(word)
-#            scores = {}
-#            for role in term_role:
-#                scores[role] = similarity_to_role(word, role)
-#            for entity in entities_in_headline:
-#                entity_index = entities.index(entity)
-#                for role in term_role:
-#                    cur_score = scores[role]
-#                    # cur_score += additional_score(entity, role, word)
-#                    cur_score *= decay_function(0.5, entity.headline_locations, i)  # TODO update f value
-#                    if role == HERO:
-#                        hero_scores[entity_index] += cur_score
-#                        if word in top_hero_words[entity_index]:
-#                            top_hero_words[entity_index][word] += cur_score
-#                        else:
-#                            top_hero_words[entity_index][word] = cur_score
-#
-#                    elif role == VILLAIN:
-#                        villain_scores[entity_index] += cur_score
-#                        if word in top_villain_words[entity_index]:
-#                            top_villain_words[entity_index][word] += cur_score
-#                        else:
-#                            top_villain_words[entity_index][word] = cur_score
-#
-#                    elif role == VICTIM:
-#                        victim_scores[entity_index] += cur_score
-#                        if word in top_victim_words[entity_index]:
-#                            top_victim_words[entity_index][word] += cur_score
-#                        else:
-#                            top_victim_words[entity_index][word] = cur_score
-
-    # Compute total headline scores
-    # TODO incorporate this headline code into actual assignment
-    # print("HEADLINE:")
-    # for i, entity in enumerate(entities):
-    #     if counts[i] != 0:
-    #         hero_score = hero_scores[i] / counts[i]
-    #         villain_score = villain_scores[i] / counts[i]
-    #         victim_score = victim_scores[i] / counts[i]
-    #     else:
-    #         hero_score, villain_score, victim_score = 0, 0, 0
-    #
-    #     print(entity)
-    #     print("HERO:", hero_score)
-    #     print("HERO TOP WORDS:", get_top_words(top_hero_words[i]))
-    #     print("VILLAIN:", villain_score)
-    #     print("VILLAIN TOP WORDS:", get_top_words(top_villain_words[i]))
-    #     print("VICTIM:", victim_score)
-    #     print("VICTIM TOP WORDS:", get_top_words(top_victim_words[i]))
-    #
-    #     # entity.role = role_to_string(role)
-    #     # print(entity)
-    #     # print(entity.role)
-    #
-    #     print("------------------------")
 
     # Initialize scores, counts, top words (indexed by entities)
     hero_scores, villain_scores, victim_scores = [], [], []
@@ -510,13 +444,23 @@ def main2(url, add_score, decay_factor):
         top_victim_words.append({})
         counts.append(0)
 
-    # Loop through each sentence
+    # Loop through each sentence (and headline)
     for sentence_index in range(len(tokenized_article)):
+
+        # Check if sentence is the headline
+        if sentence_index + 1 == len(tokenized_article):
+            headline = True
+        else:
+            headline = False
 
         # Find which entities in sentence and update counts
         entities_in_sent = []
         for i, entity in enumerate(entities):
-            if sentence_index in entity.locations:
+            if headline and entity.headline:
+                counts[i] += 1
+                entities_in_sent.append(entity)
+
+            if not headline and sentence_index in entity.locations:
                 counts[i] += 1
                 entities_in_sent.append(entity)
 
@@ -530,7 +474,10 @@ def main2(url, add_score, decay_factor):
         # Compute active/passive for each entity in sentence
         entities_act_pas = []
         for entity in entities_in_sent:
-            loc = entity.locations[sentence_index]
+            if headline:
+                loc = entity.headline_locations
+            else:
+                loc = entity.locations[sentence_index]
             entity_string = tokenized_sentence[loc[-1]]  # Use last index of entity
             entities_act_pas.append(active_passive_role(entity_string, sentence))
 
@@ -539,12 +486,12 @@ def main2(url, add_score, decay_factor):
         for i in range(len(tokenized_sentence)):
 
             # Skip word if it is part of an entity
-            if is_word_part_of_entity(entities_in_sent, sentence_index, i):
+            if is_word_part_of_entity(entities_in_sent, sentence_index, i, headline):
                 continue
 
             # Check if word is a skip word (stop words, invalid POS, punctuation)
             word = tokenized_sentence[i]
-            pos = tagged_sentence[i][1]
+            pos = None if headline else tagged_sentence[i][1]  # can't trust headline grammar
             if skip_word(word, pos):
                 continue
 
@@ -559,7 +506,13 @@ def main2(url, add_score, decay_factor):
                     cur_score = scores[role]
                     act_pas = entities_act_pas[entities_in_sent.index(entity)]
                     cur_score += additional_score(act_pas, role, add_score)
-                    cur_score *= decay_function(decay_factor, entity.locations[sentence_index], i)  # TODO update f value
+                    if headline:
+                        loc = entity.headline_locations
+                    else:
+                        loc = entity.locations[sentence_index]
+                    cur_score *= decay_function(decay_factor, loc, i)
+                    # Change headline weight
+                    # cur_score *= 2 if headline else 1
                     if role == HERO:
                         hero_scores[entity_index] += cur_score
                         if word in top_hero_words[entity_index]:
@@ -627,21 +580,8 @@ def main2(url, add_score, decay_factor):
     return entities_names_scores, top_words
 
 
-def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_score):
-    maxScore = max(hero_score, villian_score, victim_score)
-    if maxScore == hero_score:
-        role = "Hero"
-    if maxScore == villian_score:
-        role = "Villian"
-    if maxScore == victim_score:
-        role = "Victim"
-    return role
-
-#create a data structure that has dic entity name, role,  top words,
-
-
 if __name__ == "__main__":
     main2(
-"https://www.bbc.com/news/world-asia-india-47341941",
+"https://www.washingtonpost.com/local/legal-issues/paul-manafort-a-hardened-and-bold-criminal-mueller-prosecutors-tell-judge/2019/02/23/690bd33c-3542-11e9-af5b-b51b7ff322e9_story.html",
           0.2, 0.1,  # additional score, decay factor
           )
