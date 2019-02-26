@@ -74,7 +74,7 @@ def get_locations(name, tokens, locations_found):
             if length == 1:
                 index_list.append(j)
             else:
-                index_list += [j, j + length - 1]
+                index_list.append((j, j + length - 1))
             break
     return index_list
 
@@ -213,9 +213,14 @@ def get_headline_entities(headline, merged_entities):
         for name in entity.name_forms:
             index_list = get_locations(name, tokens, locations_found)
             if index_list:
-                count = len(index_list) // len(name.split())
+                count = len(index_list)
+                # replace to avoid double counting but maintain indeces
                 for i in index_list:
-                    tokens[i] = ''  # replace to avoid double counting but maintain indeces
+                    if isinstance(i, int):
+                        tokens[i] = ''
+                    else:
+                        for j in range(i[0], i[1]+1):
+                            tokens[j] = ''
                 # print(name, '- Count:', count, '- Locations:', index_list)  # TODO remove after testing
                 entity.count += count
                 entity.headline = True

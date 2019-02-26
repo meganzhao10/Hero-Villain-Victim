@@ -136,14 +136,18 @@ def word_similarity(word1, word2):
     return score
 
 
-def decay_function(decay_factor, entity_location, term_index):
+def decay_function(decay_factor, entity_locations, term_index):
     '''
     Accounts for decay in score based on distance between words.
     '''
-    distance = abs(term_index - entity_location[0])
-    if len(entity_location) > 1:
-        distance = min(distance, abs(term_index - entity_location[1]))
-    return (1 - decay_factor) ** distance
+    minDist = float("inf")
+    for loc in entity_locations:
+        if isinstance(loc, int):
+            distance = abs(term_index - loc)
+        else:
+            distance = min(abs(term_index - loc[0]), abs(term_index - loc[1]))
+        minDist = min(distance, minDist)
+    return (1 - decay_factor) ** minDist
 
 
 def sentiment(word):
@@ -377,14 +381,17 @@ def main(url):
 def is_word_part_of_entity(entities_in_sent, sentence_index, word_index):
     for entity in entities_in_sent:
         if sentence_index == "H":
-            entity_location = entity.headline_locations
+            entity_locations = entity.headline_locations
         else:
-            entity_location = entity.locations[sentence_index]
-        begin_index = entity_location[0]
-        end_index = entity_location[1] if len(entity_location) > 1 else entity_location[0]
-        # TODO I think if an entity appears twice in a sentence then we need to do something different with locations
-        if begin_index <= word_index <= end_index:
-            return True
+            entity_locations = entity.locations[sentence_index]
+
+        for loc in entity_locations:
+            if isinstance(loc, int):
+                if word_index == loc:
+                    return True
+            # TODO I think if an entity appears twice in a sentence then we need to do something different with locations
+            elif loc[0] <= word_index <= loc[1]:
+                    return True
     return False
 
 
@@ -426,7 +433,7 @@ def get_top_words2(hero_dic, villain_dic, victim_dic):
         if h:
             n += 1
         avg = (h + vil + vic) / n
-        resultHero[key] = vil - avg
+        resultVillain[key] = vil - avg
     print("VILLAIN WORDS:", get_top_words(resultVillain))
 
     resultVictim = {}
@@ -440,7 +447,7 @@ def get_top_words2(hero_dic, villain_dic, victim_dic):
         if h:
             n += 1
         avg = (h + vil + vic) / n
-        resultHero[key] = vic - avg
+        resultVictim[key] = vic - avg
     print("VICTIM WORDS:", get_top_words(resultVictim))
 
 
@@ -574,8 +581,11 @@ def main2(url, add_score, decay_factor):
         # Compute active/passive for each entity in sentence
         entities_act_pas = []
         for entity in entities_in_sent:
-            loc = entity.locations[sentence_index]
-            entity_string = tokenized_sentence[loc[-1]]  # Use last index of entity
+            last_loc = entity.locations[sentence_index][-1]  # Use last index of entity
+            if isinstance(last_loc, int):
+                entity_string = tokenized_sentence[last_loc]
+            else:
+                entity_string = tokenized_sentence[last_loc[1]]
             entities_act_pas.append(active_passive_role(entity_string, sentence))
 
         # Loop through words in sentence
@@ -583,7 +593,15 @@ def main2(url, add_score, decay_factor):
         for i in range(len(tokenized_sentence)):
 
             # Skip word if it is part of an entity
+            # if sentence_index == 0 and tokenized_sentence[i] == '2013':
+            #     print('-----------------------')
+            #     print("SENT IND", sentence_index)
+            #     print(tokenized_sentence)
+            #     print([e.name for e in entities_in_sent])
+            #     print([e.locations[sentence_index] for e in entities_in_sent])
+            #     print("WORD", tokenized_sentence[i], "INDEX", i)
             if is_word_part_of_entity(entities_in_sent, sentence_index, i):
+                # print("SKIPPING WORD")
                 continue
 
             # Check if word is a skip word (stop words, invalid POS, punctuation)
@@ -651,9 +669,8 @@ def main2(url, add_score, decay_factor):
             else:
                 top_words[VICTIM] = [x[0] for x in get_top_words(top_victim_words[i])]
 
-        print(entities_names_scores)
-        print(top_words)
-
+        # print(entities_names_scores)
+        # print(top_words)
 
         get_top_words2(top_hero_words[i], top_villain_words[i], top_victim_words[i])
 
@@ -689,6 +706,6 @@ def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_s
 
 if __name__ == "__main__":
     main2(
-"https://www.bbc.com/sport/football/46188110",
+"https://www.washingtonpost.com/politics/2019/02/18/roger-stone-deletes-photo-judge-presiding-over-his-case-says-he-didnt-mean-threaten-her/",
           0.2, 0.1,  # additional score, decay factor
           )
