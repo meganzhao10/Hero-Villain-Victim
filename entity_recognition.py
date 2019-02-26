@@ -47,7 +47,7 @@ class Entity:
         if headline:
             self.headline = True
         if headline_index_list is not None:
-            self.headline_locations
+            self.headline_locations = headline_index_list
         self.name_forms = [name]
 
     def __repr__(self):
@@ -98,7 +98,6 @@ def extract_entities_article(tokenized_article):
         for tree in chunked_entities:
             if hasattr(tree, 'label') and tree.label() in RECOGNIZED_TYPES:
                 # TODO: Currently checking entity type before merging, but adding type to entity to check after merging?
-                entity = {}
                 entity_name = ' '.join(c[0] for c in tree.leaves())
                 sentence_number = i
                 index_list = get_locations(entity_name, tokens, locations_found)
