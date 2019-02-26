@@ -75,7 +75,6 @@ def get_locations(name, tokens, locations_found):
                 index_list.append(j)
             else:
                 index_list.append((j, j + length - 1))
-            break
     return index_list
 
 
@@ -172,7 +171,7 @@ def relevance_score(alpha, entity, num_sentences):
     if entity.headline:
         score += alpha
     first_location = min([key for key in entity.locations]) + 1
-    score += entity.count / (num_sentences * first_location)
+    score += entity.count / (num_sentences * (first_location ** 0.25))
     return score
 
 
@@ -180,10 +179,12 @@ def select_high_score_entities(alpha, entity_list, num_sentences):
     '''
     Returns a list of the three entities with highest relevance score.
     '''
+    sorted_list = []
     first, second, third = -1, -1, -1
     result = [None, None, None]
     for entity in entity_list:
         score = relevance_score(alpha, entity, num_sentences)
+        sorted_list.append((entity, score))
         if score > first:
             third = second
             second = first
@@ -199,6 +200,12 @@ def select_high_score_entities(alpha, entity_list, num_sentences):
         elif score > third:
             third = score
             result[2] = entity
+
+    sorted_list = sorted(sorted_list, key=lambda x:x[1], reverse = True)
+    for i in range(10):
+        print(sorted_list[i][0])
+        print(sorted_list[i][1])
+        print('.........')
     return [x for x in result if x is not None]
 
 
@@ -252,9 +259,9 @@ def get_top_entities(headline, tokenized_article):
     print('------------------------')
     '''
 
-    highest_score_entities = select_high_score_entities(0.5, merged_entities, num_sentences)
-    headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
-    top_entities = highest_score_entities + headline_entities
+    top_entities = select_high_score_entities(0.01, merged_entities, num_sentences)
+    # headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
+    # top_entities = highest_score_entities + headline_entities
     '''
     print("Top Entities")
     for e in top_entities:
