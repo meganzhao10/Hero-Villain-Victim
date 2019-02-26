@@ -465,6 +465,8 @@ def main2(url, add_score, decay_factor):
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
 
+    return
+
     # Initialize scores, counts, top words (indexed by entities) for headline
     hero_scores, villain_scores, victim_scores = [], [], []
     top_hero_words, top_villain_words, top_victim_words = [], [], []
@@ -697,6 +699,6 @@ def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_s
 
 if __name__ == "__main__":
     main2(
-"https://www.washingtonpost.com/politics/2019/02/18/roger-stone-deletes-photo-judge-presiding-over-his-case-says-he-didnt-mean-threaten-her/",
+"https://www.npr.org/2019/02/24/695105941/against-the-odds-a-pro-soccer-team-in-kashmir-is-close-to-winning-indias-top-tit",
           0.2, 0.1,  # additional score, decay factor
           )
