@@ -586,9 +586,12 @@ def main2(url, add_score, decay_factor):
     top_words = [None, None, None]
     for i, entity in enumerate(entities):
 
-        hero_score = hero_scores[i] / counts[i]
-        villain_score = villain_scores[i] / counts[i]
-        victim_score = victim_scores[i] / counts[i]
+        if counts[i] == 0:
+            hero_score, villain_score, victim_score = 0, 0, 0
+        else:
+            hero_score = hero_scores[i] / counts[i]
+            villain_score = villain_scores[i] / counts[i]
+            victim_score = victim_scores[i] / counts[i]
 
         # algorithm to determine entity roles
         sorted_scores = sorted([hero_score, villain_score, victim_score], reverse = True)
