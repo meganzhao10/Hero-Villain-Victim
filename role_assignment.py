@@ -585,19 +585,24 @@ def main2(url, add_score, decay_factor):
     entities_names_scores = [None, None, None]
     top_words = [None, None, None]
     for i, entity in enumerate(entities):
+
         hero_score = hero_scores[i] / counts[i]
         villain_score = villain_scores[i] / counts[i]
         victim_score = victim_scores[i] / counts[i]
 
         # algorithm to determine entity roles
-        entity.role = HERO
-        max_score = max(hero_score, villain_score, victim_score)
-        if villain_score == max_score:
-            entity.role = VILLAIN
-        elif victim_score == max_score:
-            entity.role = VICTIM
+        sorted_scores = sorted([hero_score, villain_score, victim_score], reverse = True)
+        max_score = sorted_scores[0]
+        second_score = sorted_scores[1]
+        if max_score - second_score >= 0.05:
+            if hero_score == max_score:
+                entity.role = HERO
+            elif villain_score == max_score:
+                entity.role = VILLAIN
+            elif victim_score == max_score:
+                entity.role = VICTIM
 
-        if not entities_names_scores[entity.role] or max_score > entities_names_scores[entity.role][1]:
+        if entity.role != "" and (not entities_names_scores[entity.role] or max_score > entities_names_scores[entity.role][1]):
             entities_names_scores[entity.role] = (entity.name, max_score)
 
             if entity.role == HERO:
@@ -642,6 +647,6 @@ def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_s
 
 if __name__ == "__main__":
     main2(
-"https://www.bbc.com/news/world-asia-india-47341941",
+"https://www.washingtonpost.com/nation/2019/02/22/court-official-failed-click-box-witness-paid-with-his-life/?noredirect=on&utm_term=.f3a1202dcc32",
           0.2, 0.1,  # additional score, decay factor
           )
