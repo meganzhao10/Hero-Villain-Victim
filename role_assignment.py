@@ -256,7 +256,7 @@ def similarity_to_role(word, role):
     # else:
     #     avg = 0.1915
     #     std = 0.1581
-    
+
     #return score
 
     return (score - avg) / std
@@ -535,6 +535,7 @@ def main2(url, add_score, decay_factor):
             entities_act_pas.append(active_passive_role(entity_string, sentence))
 
         # Loop through words in sentence
+        tagged_sentence = pos_tag(tokenized_sentence)
         for i in range(len(tokenized_sentence)):
 
             # Skip word if it is part of an entity
@@ -542,7 +543,6 @@ def main2(url, add_score, decay_factor):
                 continue
 
             # Check if word is a skip word (stop words, invalid POS, punctuation)
-            tagged_sentence = pos_tag(tokenized_sentence)
             word = tokenized_sentence[i]
             pos = tagged_sentence[i][1]
             if skip_word(word, pos):
