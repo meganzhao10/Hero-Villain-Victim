@@ -109,7 +109,7 @@ def extract_entities_article(tokenized_article):
 def merge_entities(temp_entities):
     '''
     Merges the list of temporary entity tuples into a list of Entity objects.
-    Basis of merging algorithm from Function from NU Infolab News Context Project
+    Basis of merging algorithm from from NU Infolab News Context Project.
     (https://github.com/NUinfolab/context).
     '''
     merged_entities = []
@@ -118,13 +118,14 @@ def merge_entities(temp_entities):
         normalized_name = normalize_name(name)
         matches = []
         for entity in merged_entities:
-            if normalized_name == entity.normalized_name:
+            # Immediate match if name matches previously used name form
+            if normalized_name == entity.normalized_name or normalized_name in entity.name_forms:
                 matches = [entity]
                 break
+            # Get entities of which name is substring
             if normalized_name in entity.normalized_name:
                 matches.append(entity)
-
-        # if name is substring of one existing entity, merge it
+        # If name matches one existing entity, merge it
         if len(matches) == 1:
             entity = matches[0]
             entity.count += 1
@@ -135,7 +136,7 @@ def merge_entities(temp_entities):
                 locations[sentence_number] += index_list
             else:
                 locations[sentence_number] = index_list
-        # otherwise make new entity
+        # Otherwise make new entity
         else:
             entity = Entity(name, normalized_name, sentence_number=sentence_number, index_list=index_list)
             merged_entities.append(entity)
@@ -177,36 +178,20 @@ def relevance_score(alpha, entity, num_sentences):
 
 def select_high_score_entities(alpha, entity_list, num_sentences):
     '''
-    Returns a list of the three entities with highest relevance score.
+    Returns a list of the 5 entities with highest relevance score
+    above a threshold.
     '''
-    sorted_list = []
-    first, second, third = -1, -1, -1
-    result = [None, None, None]
+    score_list = []
     for entity in entity_list:
         score = relevance_score(alpha, entity, num_sentences)
-        sorted_list.append((entity, score))
-        if score > first:
-            third = second
-            second = first
-            first = score
-            result[2] = result[1]
-            result[1] = result[0]
-            result[0] = entity
-        elif score > second:
-            third = second
-            second = score
-            result[2] = result[1]
-            result[1] = entity
-        elif score > third:
-            third = score
-            result[2] = entity
+        score_list.append((entity, score))
 
-    sorted_list = sorted(sorted_list, key=lambda x:x[1], reverse = True)
+    score_list = sorted(score_list, key=lambda x:x[1], reverse = True)
     for i in range(10):
-        print(sorted_list[i][0])
-        print(sorted_list[i][1])
+        print(score_list[i][0])
+        print(score_list[i][1])
         print('.........')
-    return [x for x in result if x is not None]
+    return [x[0] for x in score_list[:5] if x[1] > 0.07]  # threshold: 0.07
 
 
 def get_headline_entities(headline, merged_entities):
@@ -260,6 +245,8 @@ def get_top_entities(headline, tokenized_article):
     '''
 
     top_entities = select_high_score_entities(0.01, merged_entities, num_sentences)
+    print(top_entities)
+    print('*****************')
     # headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
     # top_entities = highest_score_entities + headline_entities
     '''

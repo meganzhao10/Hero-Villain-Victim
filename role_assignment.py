@@ -465,8 +465,6 @@ def main2(url, add_score, decay_factor):
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
 
-    return
-
     # Initialize scores, counts, top words (indexed by entities) for headline
     hero_scores, villain_scores, victim_scores = [], [], []
     top_hero_words, top_villain_words, top_victim_words = [], [], []
@@ -699,6 +697,6 @@ def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_s
 
 if __name__ == "__main__":
     main2(
-"https://www.npr.org/2019/02/24/695105941/against-the-odds-a-pro-soccer-team-in-kashmir-is-close-to-winning-indias-top-tit",
+"https://www.npr.org/2019/02/26/698409206/joe-biden-very-close-to-2020-decision-as-his-family-gives-its-blessing",
           0.2, 0.1,  # additional score, decay factor
           )
