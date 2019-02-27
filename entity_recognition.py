@@ -47,7 +47,7 @@ class Entity:
         if headline:
             self.headline = True
         if headline_index_list is not None:
-            self.headline_locations
+            self.headline_locations = headline_index_list
         self.name_forms = [name]
 
     def __repr__(self):
@@ -98,7 +98,6 @@ def extract_entities_article(tokenized_article):
         for tree in chunked_entities:
             if hasattr(tree, 'label') and tree.label() in RECOGNIZED_TYPES:
                 # TODO: Currently checking entity type before merging, but adding type to entity to check after merging?
-                entity = {}
                 entity_name = ' '.join(c[0] for c in tree.leaves())
                 sentence_number = i
                 index_list = get_locations(entity_name, tokens, locations_found)
@@ -199,7 +198,7 @@ def select_high_score_entities(alpha, entity_list, num_sentences):
         elif score > third:
             third = score
             result[2] = entity
-    return result
+    return [x for x in result if x is not None]
 
 
 def get_headline_entities(headline, merged_entities):
@@ -230,14 +229,23 @@ def get_top_entities(headline, tokenized_article):
     # url = input("Enter a website to extract the URL's from: ")
     # print('Headline: ', headline)
     temp_entities, num_sentences = extract_entities_article(tokenized_article)
-    merged_entities = merge_entities(temp_entities)
+    merged_entities_ = merge_entities(temp_entities)
+
+    # Filter out images (entity recognizer thinks images are entities)
+    merged_entities = []
+    for entity in merged_entities_:
+        if "image" not in entity.name.lower():
+            merged_entities.append(entity)
+
     get_headline_entities(headline, merged_entities)
+
     '''
     print('Merged Entities:')
     for e in merged_entities:
         print(e)
     print('------------------------')
     '''
+
     highest_score_entities = select_high_score_entities(0.5, merged_entities, num_sentences)
     headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
     top_entities = highest_score_entities + headline_entities
