@@ -17,42 +17,40 @@ run = function(tabs) {
             document.getElementById("villainDiv").querySelectorAll("#villain")[0].innerHTML = data[0][1];
             document.getElementById("victimDiv").querySelectorAll("#victim")[0].innerHTML = data[0][2];
 
-            if (data[1][0] == null) {
-                word1 = "None"; word2 = "None"; word3 = "None";
-            } else {
-                word1 = data[1][0][0];
-                word2 = data[1][0][1];
-                word3 = data[1][0][2];
-            }
-            document.getElementById("heroDiv").querySelectorAll(".word1")[0].innerHTML = word1;
-            document.getElementById("heroDiv").querySelectorAll(".word2")[0].innerHTML = word2;
-            document.getElementById("heroDiv").querySelectorAll(".word3")[0].innerHTML = word3;
 
-            if (data[1][1] == null) {
-                word1 = "None"; word2 = "None"; word3 = "None";
-            } else {
-                word1 = data[1][1][0];
-                word2 = data[1][1][1];
-                word3 = data[1][1][2];  
+            if (data[1][0] != null) {
+                document.getElementById("heroDiv").querySelectorAll(".word1")[0].innerHTML = data[1][0][0];
+                document.getElementById("heroDiv").querySelectorAll(".word2")[0].innerHTML = data[1][0][1];
+                document.getElementById("heroDiv").querySelectorAll(".word3")[0].innerHTML = data[1][0][2];
             }
-            document.getElementById("villainDiv").querySelectorAll(".word1")[0].innerHTML = word1;
-            document.getElementById("villainDiv").querySelectorAll(".word2")[0].innerHTML = word2;
-            document.getElementById("villainDiv").querySelectorAll(".word3")[0].innerHTML = word3;
 
-            if (data[1][2] == null){
-                word1 = "None"; word2 = "None"; word3 = "None";
-            } else {
-                word1 = data[1][2][0];
-                word2 = data[1][2][1];
-                word3 = data[1][2][2];       
+            if (data[1][1] != null) {
+                document.getElementById("villainDiv").querySelectorAll(".word1")[0].innerHTML = data[1][1][0];
+                document.getElementById("villainDiv").querySelectorAll(".word2")[0].innerHTML = data[1][1][1];
+                document.getElementById("villainDiv").querySelectorAll(".word3")[0].innerHTML = data[1][1][2];
             }
-            document.getElementById("victimDiv").querySelectorAll(".word1")[0].innerHTML = word1;
-            document.getElementById("victimDiv").querySelectorAll(".word2")[0].innerHTML = word2;
-            document.getElementById("victimDiv").querySelectorAll(".word3")[0].innerHTML = word3; 
+
+            if (data[1][2] != null){
+                document.getElementById("victimDiv").querySelectorAll(".word1")[0].innerHTML = data[1][2][0];
+                document.getElementById("victimDiv").querySelectorAll(".word2")[0].innerHTML = data[1][2][1];
+                document.getElementById("victimDiv").querySelectorAll(".word3")[0].innerHTML = data[1][2][2]; 
+            }
 
             // Show everything except loading message
             $('div').hide();
             $('div:not(#loading)').show();
+            
+
+            if (data[1][0] == null) {
+                $('#heroWords').hide();
+            }
+            if (data[1][1] == null) {
+                $('#villainWords').hide();
+            }
+            if (data[1][2] == null) {
+                $('#victimWords').hide();
+            }
+
         });
     });
 };

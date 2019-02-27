@@ -28,7 +28,7 @@ def top_entities():
     for i in range(len(top_entity_names_scores)):
         if top_entity_names_scores[i]:
             top_entity_names[i] = top_entity_names_scores[i][0]
-
+    print("------------")
     return jsonify(top_entity_names, top_words)
 
 

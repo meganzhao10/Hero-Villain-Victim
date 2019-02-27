@@ -650,6 +650,6 @@ def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_s
 
 if __name__ == "__main__":
     main2(
-"https://www.washingtonpost.com/nation/2019/02/22/court-official-failed-click-box-witness-paid-with-his-life/?noredirect=on&utm_term=.f3a1202dcc32",
+        "https://abcnews.go.com/Politics/house-vote-terminating-trumps-national-emergency-declaration-border/story?id=61298647&cid=clicksource_4380645_1_heads_hero_live_hero_hed",
           0.2, 0.1,  # additional score, decay factor
           )
