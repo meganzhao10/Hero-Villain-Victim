@@ -29,11 +29,11 @@ Click the LOAD UNPACKED button and select the extension directory.
 
 
 ## Built With
-* [Newspaper](https://github.com/codelucas/newspaper) - to scrape articles from news sites
-* [NLTK](https://www.nltk.org/) - to recognize entities
-* [WordNet](https://wordnet.princeton.edu/) - to compute similarity of two word (we probably don't need to include this)
-* [TextBlob](https://textblob.readthedocs.io/en/dev/) - to analyze sentiment of words
-* [Spacy](https://spacy.io/) - to recognize active/passive sentences
+* [Newspaper](https://github.com/codelucas/newspaper) - scrape articles from news sites
+* [NLTK](https://www.nltk.org/) - recognize entities
+* [WordNet](https://wordnet.princeton.edu/) - compute similarity of two word (we probably don't need to include this)
+* [TextBlob](https://textblob.readthedocs.io/en/dev/) - analyze sentiment of words
+* [Spacy](https://spacy.io/) - recognize active/passive sentences
 
 
 ## Authors: 
