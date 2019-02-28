@@ -4,6 +4,7 @@ from entity_recognition import get_top_entities
 from stop_words import STOP_WORDS
 from functools import lru_cache
 from similarity_dictionary_filtered import SIM_DIC
+from neg_words import NEG_WORDS
 import re
 
 # pip install -U spacy
@@ -284,6 +285,19 @@ def main(url, add_score, decay_factor):
         # Loop through each sentence
         for sentence_index in range(len(tokenized_article)):
 
+            sentence = tokenized_article[sentence_index].strip()
+            tokenized_sentence = word_tokenize(sentence)
+
+            # Check if negation in sentence
+            isNegative = False
+            for word in tokenized_sentence:
+                if word.lower() in NEG_WORDS:
+                    isNegative = True
+                    break
+
+            if isNegative:
+                continue
+
             # Find which entities in sentence and update counts
             entities_in_sent = []
             for i, entity in enumerate(entities):
@@ -294,9 +308,6 @@ def main(url, add_score, decay_factor):
             # Skip sentence if no entities in it
             if not entities_in_sent:
                 continue
-
-            sentence = tokenized_article[sentence_index].strip()
-            tokenized_sentence = word_tokenize(sentence)
 
             # Compute active/passive for each entity in sentence
             entities_act_pas = []
@@ -390,13 +401,9 @@ def main(url, add_score, decay_factor):
                     top_words[VICTIM] = [x[0] for x in get_top_words(top_victim_words[i])]
 
             print(entity)
-            print("HERO:", hero_score)
-            print("HERO TOP WORDS:", get_top_words(top_hero_words[i]))
-            print("VILLAIN:", villain_score)
-            print("VILLAIN TOP WORDS:", get_top_words(top_villain_words[i]))
-            print("VICTIM:", victim_score)
-            print("VICTIM TOP WORDS:", get_top_words(top_victim_words[i]))
-
+            print(hero_score)
+            print(villain_score)
+            print(victim_score)
             print("------------------------")
 
         return entities_names_scores, top_words
@@ -407,6 +414,6 @@ def main(url, add_score, decay_factor):
 
 if __name__ == "__main__":
     main(
-        "https://www.washingtonpost.com/local/legal-issues/paul-manafort-a-hardened-and-bold-criminal-mueller-prosecutors-tell-judge/2019/02/23/690bd33c-3542-11e9-af5b-b51b7ff322e9_story.html",
+        "https://www.bbc.com/news/uk-england-manchester-47335414",
           0.2, 0.1,  # additional score, decay factor
           )
