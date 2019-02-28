@@ -3,7 +3,8 @@ from nltk.corpus import wordnet as wn
 from entity_recognition import get_top_entities
 from stop_words import STOP_WORDS
 from functools import lru_cache
-from similarity_dictionary_filtered import SIM_DIC
+from similarity_dictionary import SIM_DIC
+from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 import re
 
 # pip install -U spacy
@@ -14,11 +15,6 @@ import spacy
 from textblob import TextBlob
 # pip3 install newspaper3k
 from newspaper import Article
-
-
-HERO_DICT = {'gentle', 'preserving', 'leadership', 'amazing', 'devoted', 'humble', 'warned', 'surprised', 'humanity', 'brave', 'evacuate', 'redemption', 'smile', 'honor', 'revolutionize', 'leader', 'advocate', 'savior', 'charity', 'sympathies', 'kindness', 'good', 'protect', 'teach', 'reputation', 'respected', 'welfare', 'glory', 'victory', 'winner', 'well', 'contained', 'restoration', 'commitment', 'ability', 'efforts', 'inspire', 'safety', 'allies', 'health', 'strength', 'empowered', 'passion', 'encouraging', 'warm', 'vision', 'scored', 'authorities', 'justice', 'grand', 'admire', 'reshape', 'communities', 'response', 'strengthen', 'bolster', 'intervened', 'motivated', 'reconstruct', 'freedom', 'duty', 'aided', 'conquer', 'smart', 'bravery', 'improve', 'donate', 'wise', 'ingenuity', 'milestone', 'protections', 'expand', 'hero', 'pursuit', 'invent', 'containment', 'achievement', 'supporters'}
-VILLAIN_DICT = {'contaminate', 'dirty', 'abduct', 'terror', 'worsen', 'crisis', 'lambast', 'abandonment', 'harass', 'subvert', 'virus', 'crime', 'provoke', 'kidnap', 'manipulate', 'alleged', 'refusal', 'trafficking', 'marginalize', 'conformity', 'clampdown', 'villain', 'disparaged', 'cold', 'exacerbate', 'alienate', 'commit', 'trial', 'violence', 'denounced', 'stripped', 'undermine', 'seize', 'persecuted', 'opposing', 'intimidate', 'jailed', 'fool', 'investigation', 'imprisoned', 'bias', 'deception', 'gunshots', 'threaten', 'hoax', 'engulfed', 'blame', 'eruption', 'offensive', 'contempt', 'suggested', 'coercion', 'erase', 'catastrophe', 'rumors', 'weaken', 'pointed', 'treason', 'evil', 'abused', 'sentenced', 'bullet', 'warn', 'devastate', 'convicted', 'rebuke', 'reveal', 'bully', 'collude'}
-VICTIM_DICT = {'setback', 'injured', 'traumatized', 'prevented', 'healing', 'buried', 'stuck', 'anguished', 'flee', 'suffer', 'casualty', 'trampled', 'forsaken', 'harassed', 'harassment', 'hardship', 'deported', 'howling', 'shocked', 'violence', 'depressed', 'danger', 'mute', 'stripped', 'terrified', 'distrust', 'assassinated', 'shivering', 'sick', 'complain', 'abducted', 'huddled', 'victimized', 'persecuted', 'barricaded', 'devastated', 'kidnapped', 'seized', 'justified', 'evacuated', 'surrendered', 'diagnosed', 'imprisoned', 'independence', 'slave', 'deceased', 'rebuffed', 'target', 'trapped', 'screamed', 'loss', 'trafficked', 'humiliated', 'impairment', 'wounded', 'discriminated', 'disadvantaged', 'blood', 'offended', 'accuses', 'saddens', 'threatened', 'disaster', 'devastation', 'overshadowed', 'tortured', 'abused', 'remonstrated', 'jeopardizing', 'stabbed', 'prey', 'sentenced', 'challenged', 'renounced', 'scared', 'humiliation', 'deaths', 'rescued', 'bleeding'}
 
 # Parts of speech that are invalid in WordNet similarity function
 IGNORE_POS = [
@@ -46,7 +42,9 @@ HERO = 0
 VILLAIN = 1
 VICTIM = 2
 
+# Spacy model for detecting active/passive entities
 nlp = spacy.load('en')
+
 
 def extract_by_newspaper(url):
     '''
@@ -58,6 +56,7 @@ def extract_by_newspaper(url):
     headline = content.title
     article = content.text
     return headline, article
+
 
 @lru_cache(maxsize=1000000)
 def word_similarity(word1, word2):
@@ -97,7 +96,6 @@ def sentiment(word):
     Returns the sentiment of the given string as a float within
     the range [-1.0, 1.0].
     '''
-    # TODO deal with negations???
     word_blob = TextBlob(word)
     return word_blob.sentiment.polarity
 
@@ -108,7 +106,7 @@ def choose_role(word):
     to be most useful.
     '''
     s = sentiment(word)
-    if s > 0.15:  # TODO consider updating value to adjust neutral range
+    if s > 0.15:
         return [HERO]
     elif s < -0.15:
         return [VILLAIN, VICTIM]
@@ -122,14 +120,14 @@ def similarity_to_role(word, role):
     Returns the similarity of the word to the role. Optional part of speech
     argument to be passed along to WordNet.
     '''
-    similarity_total = 0
+    # Check for preprocessed scores
     scores = SIM_DIC.get(word)
-    count_zero = 0
-
     if scores:
         score = scores[role]
 
     else:
+        similarity_total, count_zero = 0, 0
+
         if role == HERO:
             dict_length = len(HERO_DICT)
             for hero_term in HERO_DICT:
@@ -155,14 +153,11 @@ def similarity_to_role(word, role):
                     count_zero += 1
 
         if dict_length - count_zero == 0:
-            return 0  # TODO do we want to do something else here?
+            return 0
 
-        score = similarity_total / (dict_length - count_zero)  # Do we want to shift this to 0,1 interval??
+        score = similarity_total / (dict_length - count_zero)
 
-    '''
-    Average and standard deviation calculated from comparing filtered dictionary
-    to the 10k words collection
-    '''
+    # Standardize scores (avg and sd from scores on top 10k english words)
     if role == HERO:
         avg = 0.3230
         std = 0.1239
@@ -180,24 +175,25 @@ def skip_word(word, pos):
     '''
     Returns true if the given word should be ignored in analysis.
     '''
-    # pronouns, conjunctions, particles, determiners
+    if any((
+        len(word) < 3,
+        pos in IGNORE_POS,
+        word == "''",
+        word == "``",
+        word == '"',
+    )):
+        return True
+
     for stop in STOP_WORDS:
-        if any((
-            len(word) < 3,
-            re.fullmatch(stop, word.lower()),
-            pos in IGNORE_POS,
-            word == "''",
-            word == "``",
-            word == '"',
-        )):
+        if re.fullmatch(stop, word.lower()):
             return True
 
     return False
 
+
 def active_passive_role(entity_string, aSentence):
     '''
-    Determine whether the entity is an active or passive role
-    depending on if it's subject or object in a sentence
+    Determine whether the entity is an active or passive role.
     Active roles = subject or passive object
     Passive roles = object or passive subject
     '''
@@ -207,7 +203,6 @@ def active_passive_role(entity_string, aSentence):
         if (tok.dep_ == "nsubj"):
             isActive = True
         if (str(tok) == entity_string):
-            # print(str(tok) + ": " + str(tok.dep_))
             if (tok.dep_ == "nsubj"):
                 return "active"
             if (tok.dep_ == "pobj" and not isActive):
@@ -222,6 +217,10 @@ def active_passive_role(entity_string, aSentence):
 
 
 def is_word_part_of_entity(entities_in_sent, sentence_index, word_index):
+    '''
+    Determine if the word at word_index is part of one of the top entities
+    in the sentence.
+    '''
     for entity in entities_in_sent:
         if sentence_index == "H":
             entity_locations = entity.headline_locations
@@ -250,6 +249,10 @@ def get_top_words(word_dic):
 
 
 def additional_score(act_pas, role, score):
+    '''
+    Computes an additional score if the active/passive input matches the
+    given role. Active matches hero and villain. Passive matches victim.
+    '''
     if act_pas == "active" and (role == HERO or role == VILLAIN):
         return score
     if act_pas == "passive" and role == VICTIM:
