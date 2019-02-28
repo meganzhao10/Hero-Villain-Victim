@@ -4,7 +4,7 @@ A Google Chrome extension to detect roles of hero, villain, and victim in news a
 ## Getting Started
 
 ### Prerequisites
-nltk
+NLTK
 
 TextBlob
 ```
@@ -26,8 +26,12 @@ Click the LOAD UNPACKED button and select the extension directory.
 
 
 ## Built With
+* [Newspaper](https://github.com/codelucas/newspaper) - to scrape articles from news sites
+* [NLTK](https://www.nltk.org/) - to recognize entities
+* [WordNet](https://wordnet.princeton.edu/) - to compute similarity of two word (we probably don't need to include this)
+* [TextBlob](https://textblob.readthedocs.io/en/dev/) - to analyze sentiment of words
+* [Spacy](https://spacy.io/) - to recognize active/passive sentences
 
-* [WordNet](https://wordnet.princeton.edu/) - We use  to test the similarity of two words.
 
 ## Authors: 
 * **Tianna Avery** - [tiannaavery](https://github.com/tiannaavery)
