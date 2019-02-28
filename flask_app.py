@@ -1,11 +1,10 @@
 from flask import Flask, jsonify, request
-from nltk import pos_tag, sent_tokenize, word_tokenize
-import entity_recognition
 import role_assignment
 
 app = Flask(__name__)
 
-# allow cross-origin resource sharing
+
+# Allow cross-origin resource sharing
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -13,16 +12,16 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
+
+# Run role assignment algorithm
 @app.route('/')
-def top_entities():
+def assign_roles():
     url = request.args.get("url")
 
     try:
         top_entity_names_scores, top_words = role_assignment.main(url, 0.2, 0.1)
         if top_entity_names_scores == top_words == 0:
             return jsonify("Extraction error")
-        elif top_entity_names_scores == top_words == 1:
-            return jsonify("Entity recognition/role assignment errors")
         else:
             top_entity_names = ["None", "None", "None"]
             for i in range(len(top_entity_names_scores)):

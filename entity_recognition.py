@@ -39,7 +39,7 @@ class Entity:
     headline_locations = []
     headline = False
     name_forms = []
-    role = ""
+    role = None
 
     def __init__(self, name, normalized_name, sentence_number=None,
                  index_list=None, headline=False, headline_index_list=None,
