@@ -1,12 +1,21 @@
+'''
+File used to help calculate means and standard deviations for
+normalizing/standardizing scores.
+Note: this will not properly run anymore due to many changes in
+actual code base.
+'''
+
+
 from role_assignment import similarity_to_role as sim
 from role_assignment import HERO, VILLAIN, VICTIM
 from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 from role_assignment import skip_word
 from similarity_dictionary import SIM_DIC
-#from similarity_dictionary_filtered import SIM_DIC
+# from similarity_dictionary_filtered import SIM_DIC
 import statistics
 
 std = [0] * 3
+
 
 def process_file(filename, dic):
     '''
@@ -23,7 +32,7 @@ def process_file(filename, dic):
         i = 0
         line_number = 0
         for line in input_file:
-        #for line in reversed(list(input_file)):
+        # for line in reversed(list(input_file)):
             word = line.strip()
             # Skip comments, words ignored for analysis, and words already in dic
             if word[0] != '#' and not skip_word(word, None):
@@ -44,7 +53,6 @@ def process_file(filename, dic):
             # if i % 10000 == 0:
             #     print(i, "words read...")
 
-
         print("DONE:", filename)
     for j in range(len(scores)):
         scores[j] /= i
@@ -62,11 +70,11 @@ print(std)
 
 '''
 10k
-c - Full dictionary : 
+c - Full dictionary :
 [0.33984155119157283, 0.3239487422302778, 0.31806888895945695]
 [0.1271476844983633, 0.12594416854760865, 0.12384311388567634]
 
-c-Filtered dictionary: 
+c-Filtered dictionary:
 [0.32305452392159195, 0.28782595388590715, 0.2901647892770812]
 [0.12396667686493487, 0.12025576023093629, 0.1194044117127747]
 

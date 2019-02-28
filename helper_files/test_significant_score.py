@@ -1,3 +1,11 @@
+'''
+Calculates scores across dictionaries using standardization.
+Used to verify methods since hero-hero scores should be high,
+hero-victim scores should be low, etc.
+Note: Will not run properly anymore
+'''
+
+
 from role_assignment import similarity_to_role
 from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 

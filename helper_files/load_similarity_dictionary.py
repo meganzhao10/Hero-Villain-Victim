@@ -1,3 +1,9 @@
+'''
+Preprocceses the top english words to get there similarity_to_role scores.
+Note: similarity_to_role has since been changed to standardize these scores,
+so re-running will not produce identical results.
+'''
+
 import json
 from role_assignment import similarity_to_role, skip_word, HERO, VILLAIN, VICTIM
 
