@@ -78,14 +78,18 @@ def word_similarity(word1, word2):
     return score
 
 
-def decay_function(decay_factor, entity_location, term_index):
+def decay_function(decay_factor, entity_locations, term_index):
     '''
     Accounts for decay in score based on distance between words.
     '''
-    distance = abs(term_index - entity_location[0])
-    if len(entity_location) > 1:
-        distance = min(distance, abs(term_index - entity_location[1]))
-    return (1 - decay_factor) ** distance
+    minDist = float("inf")
+    for loc in entity_locations:
+        if isinstance(loc, int):
+            distance = abs(term_index - loc)
+        else:
+            distance = min(abs(term_index - loc[0]), abs(term_index - loc[1]))
+        minDist = min(distance, minDist)
+    return (1 - decay_factor) ** minDist
 
 
 def sentiment(word):
@@ -156,7 +160,7 @@ def similarity_to_role(word, role):
         score = similarity_total / (dict_length - count_zero)  # Do we want to shift this to 0,1 interval??
 
     '''
-    Average and standard deviation calculated from comparing filtered dictionary 
+    Average and standard deviation calculated from comparing filtered dictionary
     to the 10k words collection
     '''
     if role == HERO:
@@ -220,14 +224,16 @@ def active_passive_role(entity_string, aSentence):
 def is_word_part_of_entity(entities_in_sent, sentence_index, word_index):
     for entity in entities_in_sent:
         if sentence_index == "H":
-            entity_location = entity.headline_locations
+            entity_locations = entity.headline_locations
         else:
-            entity_location = entity.locations[sentence_index]
-        begin_index = entity_location[0]
-        end_index = entity_location[1] if len(entity_location) > 1 else entity_location[0]
-        # TODO I think if an entity appears twice in a sentence then we need to do something different with locations
-        if begin_index <= word_index <= end_index:
-            return True
+            entity_locations = entity.locations[sentence_index]
+
+        for loc in entity_locations:
+            if isinstance(loc, int):
+                if word_index == loc:
+                    return True
+            elif loc[0] <= word_index <= loc[1]:
+                    return True
     return False
 
 
@@ -241,6 +247,50 @@ def get_top_words(word_dic):
             break
         result.append((word, word_dic[word]))
     return result
+
+
+def get_top_words2(hero_dic, villain_dic, victim_dic):
+    resultHero = {}
+    for key in hero_dic:
+        n = 1
+        h = hero_dic.get(key, 0)
+        vil = villain_dic.get(key, 0)
+        vic = victim_dic.get(key, 0)
+        if vil:
+            n += 1
+        if vic:
+            n += 1
+        avg = (h + vil + vic) / n
+        resultHero[key] = h - avg
+    print("HERO WORDS:", get_top_words(resultHero))
+
+    resultVillain = {}
+    for key in villain_dic:
+        n = 1
+        h = hero_dic.get(key, 0)
+        vil = villain_dic.get(key, 0)
+        vic = victim_dic.get(key, 0)
+        if vil:
+            n += 1
+        if h:
+            n += 1
+        avg = (h + vil + vic) / n
+        resultVillain[key] = vil - avg
+    print("VILLAIN WORDS:", get_top_words(resultVillain))
+
+    resultVictim = {}
+    for key in victim_dic:
+        n = 1
+        h = hero_dic.get(key, 0)
+        vil = villain_dic.get(key, 0)
+        vic = victim_dic.get(key, 0)
+        if vil:
+            n += 1
+        if h:
+            n += 1
+        avg = (h + vil + vic) / n
+        resultVictim[key] = vic - avg
+    print("VICTIM WORDS:", get_top_words(resultVictim))
 
 
 def additional_score(act_pas, role, score):
@@ -258,7 +308,6 @@ def main(url, add_score, decay_factor):
         return 0, 0
     if len(article) == 0:
         return 0, 0
-
     try:
         tokenized_article = sent_tokenize(article)
         entities = get_top_entities(headline, tokenized_article)
@@ -296,8 +345,11 @@ def main(url, add_score, decay_factor):
             # Compute active/passive for each entity in sentence
             entities_act_pas = []
             for entity in entities_in_sent:
-                loc = entity.locations[sentence_index]
-                entity_string = tokenized_sentence[loc[-1]]  # Use last index of entity
+                last_loc = entity.locations[sentence_index][-1]  # Use last index of entity
+                if isinstance(last_loc, int):
+                    entity_string = tokenized_sentence[last_loc]
+                else:
+                    entity_string = tokenized_sentence[last_loc[1]]
                 entities_act_pas.append(active_passive_role(entity_string, sentence))
 
             # Loop through words in sentence
@@ -329,23 +381,23 @@ def main(url, add_score, decay_factor):
                         if role == HERO:
                             hero_scores[entity_index] += cur_score
                             if word in top_hero_words[entity_index]:
-                                top_hero_words[entity_index][word] += cur_score
+                                top_hero_words[entity_index][word.lower()] += cur_score
                             else:
-                                top_hero_words[entity_index][word] = cur_score
+                                top_hero_words[entity_index][word.lower()] = cur_score
 
                         elif role == VILLAIN:
                             villain_scores[entity_index] += cur_score
                             if word in top_villain_words[entity_index]:
-                                top_villain_words[entity_index][word] += cur_score
+                                top_villain_words[entity_index][word.lower()] += cur_score
                             else:
-                                top_villain_words[entity_index][word] = cur_score
+                                top_villain_words[entity_index][word.lower()] = cur_score
 
                         elif role == VICTIM:
                             victim_scores[entity_index] += cur_score
                             if word in top_victim_words[entity_index]:
-                                top_victim_words[entity_index][word] += cur_score
+                                top_victim_words[entity_index][word.lower()] += cur_score
                             else:
-                                top_victim_words[entity_index][word] = cur_score
+                                top_victim_words[entity_index][word.lower()] = cur_score
 
         # Compute total scores
         entities_names_scores = [None, None, None]
@@ -381,6 +433,8 @@ def main(url, add_score, decay_factor):
                 else:
                     top_words[VICTIM] = [x[0] for x in get_top_words(top_victim_words[i])]
 
+            get_top_words2(top_hero_words[i], top_villain_words[i], top_victim_words[i])
+
             print(entity)
             print("HERO:", hero_score)
             print("HERO TOP WORDS:", get_top_words(top_hero_words[i]))
@@ -398,6 +452,6 @@ def main(url, add_score, decay_factor):
 
 if __name__ == "__main__":
     main(
-        "https://abcnews.go.com/Politics/house-vote-terminating-trumps-national-emergency-declaration-border/story?id=61298647&cid=clicksource_4380645_1_heads_hero_live_hero_hed",
+        "https://www.washingtonpost.com/local/legal-issues/paul-manafort-a-hardened-and-bold-criminal-mueller-prosecutors-tell-judge/2019/02/23/690bd33c-3542-11e9-af5b-b51b7ff322e9_story.html",
           0.2, 0.1,  # additional score, decay factor
           )
