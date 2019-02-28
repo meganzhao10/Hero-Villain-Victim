@@ -249,50 +249,6 @@ def get_top_words(word_dic):
     return result
 
 
-def get_top_words2(hero_dic, villain_dic, victim_dic):
-    resultHero = {}
-    for key in hero_dic:
-        n = 1
-        h = hero_dic.get(key, 0)
-        vil = villain_dic.get(key, 0)
-        vic = victim_dic.get(key, 0)
-        if vil:
-            n += 1
-        if vic:
-            n += 1
-        avg = (h + vil + vic) / n
-        resultHero[key] = h - avg
-    print("HERO WORDS:", get_top_words(resultHero))
-
-    resultVillain = {}
-    for key in villain_dic:
-        n = 1
-        h = hero_dic.get(key, 0)
-        vil = villain_dic.get(key, 0)
-        vic = victim_dic.get(key, 0)
-        if vil:
-            n += 1
-        if h:
-            n += 1
-        avg = (h + vil + vic) / n
-        resultVillain[key] = vil - avg
-    print("VILLAIN WORDS:", get_top_words(resultVillain))
-
-    resultVictim = {}
-    for key in victim_dic:
-        n = 1
-        h = hero_dic.get(key, 0)
-        vil = villain_dic.get(key, 0)
-        vic = victim_dic.get(key, 0)
-        if vil:
-            n += 1
-        if h:
-            n += 1
-        avg = (h + vil + vic) / n
-        resultVictim[key] = vic - avg
-    print("VICTIM WORDS:", get_top_words(resultVictim))
-
-
 def additional_score(act_pas, role, score):
     if act_pas == "active" and (role == HERO or role == VILLAIN):
         return score
@@ -433,8 +389,6 @@ def main(url, add_score, decay_factor):
                 else:
                     top_words[VICTIM] = [x[0] for x in get_top_words(top_victim_words[i])]
 
-            get_top_words2(top_hero_words[i], top_villain_words[i], top_victim_words[i])
-
             print(entity)
             print("HERO:", hero_score)
             print("HERO TOP WORDS:", get_top_words(top_hero_words[i]))
@@ -449,6 +403,7 @@ def main(url, add_score, decay_factor):
 
     except:
         return 1, 1
+
 
 if __name__ == "__main__":
     main(
