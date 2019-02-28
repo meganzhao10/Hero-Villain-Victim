@@ -282,123 +282,131 @@ def get_entities_act_pas(sentence_index, sentence, tokenized_sentence, entities_
     return entities_act_pas
 
 
-class RoleAssigner():
+# Global variables needed for functions below
+top_entities, add_score, decay = 0, 0, 0
+hero_scores, villain_scores, victim_scores, counts = [], [], [], []
+top_hero_words, top_villain_words, top_victim_words = [{}], [{}], [{}]
+
+
+def initialize_globals(entities, additional_score, decay_factor):
     '''
-    Class to store the global variables needed for role_assignment and the methods
-    that depend upon those globals.
+    Initialize entities, decay factor, and additional score for active/passive.
+    Also set up lists for scores, counts, top words (indexed by entities).
     '''
-    def __init__(self, entities, additional_score, decay_factor):
-        '''
-        Initialize entities, decay factor, and additional score for active/passive.
-        Also set up lists for scores, counts, top words (indexed by entities).
-        '''
-        self.entities = entities
-        self.add_score = additional_score
-        self.decay = decay_factor
-        n = len(entities)
-        self.hero_scores, self.villain_scores, self.victim_scores, self.counts = ([0]*n for i in range(4))
-        self.top_hero_words, self.top_villain_words, self.top_victim_words = ([{}]*n for i in range(3))
+    global top_entities, add_score, decay
+    global hero_scores, villain_scores, victim_scores, counts
+    global top_hero_words, top_villain_words, top_victim_words
+    top_entities = entities
+    add_score = additional_score
+    decay = decay_factor
+    n = len(entities)
+    hero_scores, villain_scores, victim_scores, counts = ([0]*n for i in range(4))
+    top_hero_words, top_villain_words, top_victim_words = ([{}]*n for i in range(3))
 
-    def get_entities_in_sent(self, sentence_index):
-        '''
-        Returns a list of entities in the sentence and updates counts.
-        '''
-        entities_in_sent = []
-        for i, entity in enumerate(self.entities):
-            if sentence_index in entity.locations:
-                self.counts[i] += 1
-                entities_in_sent.append(entity)
-        return entities_in_sent
 
-    def update_total_scores(self, entity, role, word, word_score):
-        '''
-        Adds the given score to the entity's total score for the given role.
-        Also updates top words for that role.
-        '''
-        entity_index = self.entities.index(entity)
-        if role == HERO:
-            self.hero_scores[entity_index] += word_score
-            if word in self.top_hero_words[entity_index]:
-                self.top_hero_words[entity_index][word.lower()] += word_score
-            else:
-                self.top_hero_words[entity_index][word.lower()] = word_score
-        elif role == VILLAIN:
-            self.villain_scores[entity_index] += word_score
-            if word in self.top_villain_words[entity_index]:
-                self.top_villain_words[entity_index][word.lower()] += word_score
-            else:
-                self.top_villain_words[entity_index][word.lower()] = word_score
-        elif role == VICTIM:
-            self.victim_scores[entity_index] += word_score
-            if word in self.top_victim_words[entity_index]:
-                self.top_victim_words[entity_index][word.lower()] += word_score
-            else:
-                self.top_victim_words[entity_index][word.lower()] = word_score
+def get_entities_in_sent(sentence_index):
+    '''
+    Returns a list of entities in the sentence and updates counts.
+    '''
+    entities_in_sent = []
+    for i, entity in enumerate(top_entities):
+        if sentence_index in entity.locations:
+            counts[i] += 1
+            entities_in_sent.append(entity)
+    return entities_in_sent
 
-    def score_word(self, word, word_index, sentence_index, entities_in_sent, entities_act_pas):
-        '''
-        Scores the word across the appropriate roles and updates totals.
-        '''
-        # Compute scores for roles that match word senitment
-        roles_to_check = choose_roles_by_sentiment(word)
-        scores = {}
+
+def update_total_scores(entity, role, word, word_score):
+    '''
+    Adds the given score to the entity's total score for the given role.
+    Also updates top words for that role.
+    '''
+    entity_index = top_entities.index(entity)
+    if role == HERO:
+        hero_scores[entity_index] += word_score
+        if word in top_hero_words[entity_index]:
+            top_hero_words[entity_index][word.lower()] += word_score
+        else:
+            top_hero_words[entity_index][word.lower()] = word_score
+    elif role == VILLAIN:
+        villain_scores[entity_index] += word_score
+        if word in top_villain_words[entity_index]:
+            top_villain_words[entity_index][word.lower()] += word_score
+        else:
+            top_villain_words[entity_index][word.lower()] = word_score
+    elif role == VICTIM:
+        victim_scores[entity_index] += word_score
+        if word in top_victim_words[entity_index]:
+            top_victim_words[entity_index][word.lower()] += word_score
+        else:
+            top_victim_words[entity_index][word.lower()] = word_score
+
+
+def score_word(word, word_index, sentence_index, entities_in_sent, entities_act_pas):
+    '''
+    Scores the word across the appropriate roles and updates totals.
+    '''
+    # Compute scores for roles that match word senitment
+    roles_to_check = choose_roles_by_sentiment(word)
+    scores = {}
+    for role in roles_to_check:
+        scores[role] = similarity_to_role(word, role)
+
+    # Compute score for each entity-role pair and update totals
+    for entity in entities_in_sent:
         for role in roles_to_check:
-            scores[role] = similarity_to_role(word, role)
+            cur_score = scores[role]
+            act_pas = entities_act_pas[entities_in_sent.index(entity)]
+            cur_score += additional_score(act_pas, role, add_score)
+            cur_score *= decay_function(decay, entity.locations[sentence_index], word_index)
+            update_total_scores(entity, role, word, cur_score)
 
-        # Compute score for each entity-role pair and update totals
-        for entity in entities_in_sent:
-            for role in roles_to_check:
-                cur_score = scores[role]
-                act_pas = entities_act_pas[entities_in_sent.index(entity)]
-                cur_score += additional_score(act_pas, role, self.add_score)
-                cur_score *= decay_function(self.decay, entity.locations[sentence_index], word_index)
-                self.update_total_scores(entity, role, word, cur_score)
 
-    def assign_roles(self):
-        entities_role_results = [(None, 0), (None, 0), (None, 0)]
-        top_words = [None, None, None]
-        for i, entity in enumerate(self.entities):
+def get_roles_and_top_words():
+    entities_role_results = [(None, 0), (None, 0), (None, 0)]
+    top_words = [None, None, None]
+    for i, entity in enumerate(top_entities):
 
-            # Compute final role scores
-            if self.counts[i] == 0:
-                hero_score, villain_score, victim_score = 0, 0, 0
+        # Compute final role scores
+        if counts[i] == 0:
+            hero_score, villain_score, victim_score = 0, 0, 0
+        else:
+            hero_score = hero_scores[i] / counts[i]
+            villain_score = villain_scores[i] / counts[i]
+            victim_score = victim_scores[i] / counts[i]
+
+        # TODO delete this printing
+        print(entity)
+        print("HERO:", hero_score)
+        print("VILLAIN:", villain_score)
+        print("VICTIM:", victim_score)
+        print("------------------------")
+
+        # Determine entity role based on max role score
+        sorted_scores = sorted([hero_score, villain_score, victim_score], reverse=True)
+        max_score = sorted_scores[0]
+        if max_score - sorted_scores[1] >= 0.05:  # Don't assign if scores too close
+            if hero_score == max_score:
+                entity.role = HERO
+            elif villain_score == max_score:
+                entity.role = VILLAIN
+            elif victim_score == max_score:
+                entity.role = VICTIM
+
+        # Assign entity to corresponding role if score is larger than current leader
+        if entity.role is not None and max_score > entities_role_results[entity.role][1]:
+            entities_role_results[entity.role] = (entity.name, max_score)
+
+            # Update top words accordingly
+            if entity.role == HERO:
+                top_words[HERO] = [x[0] for x in get_top_words(top_hero_words[i])]
+            elif entity.role == VILLAIN:
+                top_words[VILLAIN] = [x[0] for x in get_top_words(top_villain_words[i])]
             else:
-                hero_score = self.hero_scores[i] / self.counts[i]
-                villain_score = self.villain_scores[i] / self.counts[i]
-                victim_score = self.victim_scores[i] / self.counts[i]
+                top_words[VICTIM] = [x[0] for x in get_top_words(top_victim_words[i])]
 
-            # TODO delete this printing
-            print(entity)
-            print("HERO:", hero_score)
-            print("VILLAIN:", villain_score)
-            print("VICTIM:", victim_score)
-            print("------------------------")
-
-            # Determine entity role based on max role score
-            sorted_scores = sorted([hero_score, villain_score, victim_score], reverse=True)
-            max_score = sorted_scores[0]
-            if max_score - sorted_scores[1] >= 0.05:  # Don't assign if scores too close
-                if hero_score == max_score:
-                    entity.role = HERO
-                elif villain_score == max_score:
-                    entity.role = VILLAIN
-                elif victim_score == max_score:
-                    entity.role = VICTIM
-
-            # Assign entity to corresponding role if score is larger than current leader
-            if entity.role is not None and max_score > entities_role_results[entity.role][1]:
-                entities_role_results[entity.role] = (entity.name, max_score)
-
-                # Update top words accordingly
-                if entity.role == HERO:
-                    top_words[HERO] = [x[0] for x in get_top_words(self.top_hero_words[i])]
-                elif entity.role == VILLAIN:
-                    top_words[VILLAIN] = [x[0] for x in get_top_words(self.top_villain_words[i])]
-                else:
-                    top_words[VICTIM] = [x[0] for x in get_top_words(self.top_victim_words[i])]
-
-        result = [x[0] for x in entities_role_results]
-        return result, top_words
+    result = [x[0] for x in entities_role_results]
+    return result, top_words
 
 
 def assign_roles(url, add_score, decay_factor):
@@ -412,14 +420,14 @@ def assign_roles(url, add_score, decay_factor):
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
 
-    # Set up role assigner object
-    role_assigner = RoleAssigner(entities, add_score, decay_factor)
+    # Initialize globals
+    initialize_globals(entities, add_score, decay_factor)
 
     # Loop through each sentence
     for sentence_index in range(len(tokenized_article)):
 
-        # User role assigner to find entities in sentence and update counts
-        entities_in_sent = role_assigner.get_entities_in_sent(sentence_index)
+        # Find entities in sentence and update counts
+        entities_in_sent = get_entities_in_sent(sentence_index)
 
         # Skip sentence if no entities.
         if not entities_in_sent:
@@ -446,11 +454,12 @@ def assign_roles(url, add_score, decay_factor):
             if skip_word(word, pos):
                 continue
 
-            # Use role assigner to score word and track results
-            role_assigner.score_word(word, word_index, sentence_index, entities_in_sent, entities_act_pas)
+            # Score word and track results
+            score_word(word, word_index, sentence_index, entities_in_sent, entities_act_pas)
 
-    # Use role assigner to finalize assignment
-    return role_assigner.assign_roles()
+    # Finalize assignment and top words
+    return get_roles_and_top_words()
+
 
 # TODO delete this from final version
 if __name__ == "__main__":
