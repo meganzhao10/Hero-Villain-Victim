@@ -1,0 +1,54 @@
+'''
+NewsPaper works for:
+BBC
+reuters
+news.yahoo.com
+huffingtonpost
+https://www.latimes.com/
+https://www.usatoday.com/
+usnews
+https://www.theguardian.com/us
+https://www.washingtonpost.com/?reload=true
+https://www.dailymail.co.uk/ushome/index.html
+nbc
+
+
+Partially works for:
+NY Times partial
+CNN (read more thing) - show part of the content, and then "Read More"...
+wsj: mainly because subsribtion restriction
+
+
+
+NOT WORKING:
+https://abcnews.go.com/
+'''
+
+
+
+
+
+
+
+
+'''
+NewPlease (usually takes longer time) works for:
+BBC
+reuters
+news.yahoo.com
+huffingtonpost
+https://www.latimes.com/
+https://www.usatoday.com/
+https://www.theguardian.com/us
+https://www.washingtonpost.com/?reload=true
+https://www.dailymail.co.uk/ushome/index.html
+nbc
+Partially works for:
+NY Times partial 
+CNN (read more thing)
+wsj: mainly because subsribtion restriction
+NOT WORK FOR:
+https://abcnews.go.com/
+usNEWS
+Cookie handling : Some websites need cookie handling. At the moment the only work around is to use the raw_html extraction. For instance ;
+'''
