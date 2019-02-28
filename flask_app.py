@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-import role_assignment
+from role_assignment import assign_roles, NewspaperError
 
 app = Flask(__name__)
 
@@ -15,19 +15,17 @@ def after_request(response):
 
 # Run role assignment algorithm
 @app.route('/')
-def assign_roles():
+def role_assignment():
     url = request.args.get("url")
-
     try:
-        top_entity_names_scores, top_words = role_assignment.main(url, 0.2, 0.1)
-        if top_entity_names_scores == top_words == 0:
-            return jsonify("Extraction error")
-        else:
-            top_entity_names = ["None", "None", "None"]
-            for i in range(len(top_entity_names_scores)):
-                if top_entity_names_scores[i]:
-                    top_entity_names[i] = top_entity_names_scores[i][0]
-            return jsonify(top_entity_names, top_words)
+        role_names, top_words = assign_roles(url, 0.2, 0.1)
+        top_entity_names = []
+        for name in role_names:
+            name_string = name if name else "None"
+            top_entity_names.append(name_string)
+        return jsonify(top_entity_names, top_words)
+    except NewspaperError:
+        return jsonify("Extraction error")
     except:
         return jsonify("Entity recognition/role assignment errors")
 

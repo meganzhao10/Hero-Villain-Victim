@@ -48,6 +48,11 @@ VICTIM = 2
 nlp = spacy.load('en')
 
 
+# Raised when newspaper fails to extract article or headline
+class NewspaperError(Exception):
+    pass
+
+
 def extract_by_newspaper(url):
     '''
     News article extraction from url using newspaper package.
@@ -308,7 +313,7 @@ class RoleAssigner():
     def update_total_scores(self, entity, role, word, word_score):
         '''
         Adds the given score to the entity's total score for the given role.
-        Also updates top words
+        Also updates top words for that role.
         '''
         entity_index = self.entities.index(entity)
         if role == HERO:
@@ -317,14 +322,12 @@ class RoleAssigner():
                 self.top_hero_words[entity_index][word.lower()] += word_score
             else:
                 self.top_hero_words[entity_index][word.lower()] = word_score
-
         elif role == VILLAIN:
             self.villain_scores[entity_index] += word_score
             if word in self.top_villain_words[entity_index]:
                 self.top_villain_words[entity_index][word.lower()] += word_score
             else:
                 self.top_villain_words[entity_index][word.lower()] = word_score
-
         elif role == VICTIM:
             self.victim_scores[entity_index] += word_score
             if word in self.top_victim_words[entity_index]:
@@ -394,17 +397,18 @@ class RoleAssigner():
                 else:
                     top_words[VICTIM] = [x[0] for x in get_top_words(self.top_victim_words[i])]
 
-        return entities_role_results, top_words
+        result = [x[0] for x in entities_role_results]
+        return result, top_words
 
 
-def main(url, add_score, decay_factor):
+def assign_roles(url, add_score, decay_factor):
     # Extract article from url, tokenize, extract entities
     try:
         headline, article = extract_by_newspaper(url)
     except:
-        return 0, 0
+        raise NewspaperError
     if len(article) == 0:
-        return 0, 0
+        raise NewspaperError
     tokenized_article = sent_tokenize(article)
     entities = get_top_entities(headline, tokenized_article)
 
@@ -448,9 +452,9 @@ def main(url, add_score, decay_factor):
     # Use role assigner to finalize assignment
     return role_assigner.assign_roles()
 
-
+# TODO delete this from final version
 if __name__ == "__main__":
-    main(
+    assign_roles(
         "https://www.washingtonpost.com/local/legal-issues/paul-manafort-a-hardened-and-bold-criminal-mueller-prosecutors-tell-judge/2019/02/23/690bd33c-3542-11e9-af5b-b51b7ff322e9_story.html",
           0.2, 0.1,  # additional score, decay factor
           )
