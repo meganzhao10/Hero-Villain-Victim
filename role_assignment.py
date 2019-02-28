@@ -697,6 +697,6 @@ def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_s
 
 if __name__ == "__main__":
     main2(
-"https://www.npr.org/2019/02/26/698409206/joe-biden-very-close-to-2020-decision-as-his-family-gives-its-blessing",
+"https://www.washingtonpost.com/local/legal-issues/paul-manafort-a-hardened-and-bold-criminal-mueller-prosecutors-tell-judge/2019/02/23/690bd33c-3542-11e9-af5b-b51b7ff322e9_story.html",
           0.2, 0.1,  # additional score, decay factor
           )

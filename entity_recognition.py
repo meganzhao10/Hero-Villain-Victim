@@ -1,9 +1,7 @@
 '''
-Potential concerns and possible features to implement in the future
--Exclude the location tag at the beginning of the article
--Dealing with positions (the witness...)
+Recognizes the entities in a news article with a headline and determines
+which of these entities are the  most relevant.
 '''
-# TODO remove all print statements once done testing
 
 import codecs
 from nltk import ne_chunk, pos_tag, word_tokenize
@@ -29,6 +27,11 @@ NAME_PREFIXES = (
 
 
 class Entity:
+    '''
+    Represents an entity in the news article. Contain the entities top-level
+    name, all name forms used in the article, count of occurences, and data
+    about its locations within the article and headline.
+    '''
     name = ""
     normalized_name = ""
     count = 0
@@ -38,7 +41,12 @@ class Entity:
     name_forms = []
     role = ""
 
-    def __init__(self, name, normalized_name, sentence_number=None, index_list=None, headline=False, headline_index_list=None):
+    def __init__(self, name, normalized_name, sentence_number=None,
+                 index_list=None, headline=False, headline_index_list=None,
+                 ):
+        '''
+        Construct a new entity.
+        '''
         self.name = name
         self.normalized_name = normalized_name
         self.count = 1
@@ -51,6 +59,9 @@ class Entity:
         self.name_forms = [name]
 
     def __repr__(self):
+        '''
+        String representation of the entity.
+        '''
         return ('(Name: {name}, Count: {count}, Headline: {headline}, '
                 'Headline Locations: {headline_locs}, Text Locations: {locations})'
                 .format(name=self.name, count=self.count, headline=self.headline,
@@ -62,8 +73,10 @@ class Entity:
 def get_locations(name, tokens, locations_found):
     '''
     Returns a list of indeces of the locations of name in the given tokenized
-    set of words. Location is represented as the first and last index of each
-    occurence of name. Updates locations_found dictionary accordingly.
+    set of words. Location are represented either as an index of the location
+    (if the occurence is one word) or a tule of the first and last index of the
+    entity (if the occurence is multiple words). Updates locations_found
+    dictionary accordingly.
     '''
     index_list = []
     lastIndex = locations_found.get(name, 0)
@@ -96,8 +109,6 @@ def extract_entities_article(tokenized_article):
         locations_found = {}
         for tree in chunked_entities:
             if hasattr(tree, 'label') and tree.label() in RECOGNIZED_TYPES:
-                # TODO: Currently checking entity type before merging, but adding type to entity to check after merging?
-                entity = {}
                 entity_name = ' '.join(c[0] for c in tree.leaves())
                 sentence_number = i
                 index_list = get_locations(entity_name, tokens, locations_found)
@@ -178,8 +189,8 @@ def relevance_score(alpha, entity, num_sentences):
 
 def select_high_score_entities(alpha, entity_list, num_sentences):
     '''
-    Returns a list of the 5 entities with highest relevance score
-    above a threshold.
+    Returns a list of the 4 entities with highest relevance score
+    above a threshold of 0.07 (chosen after testing many articles).
     '''
     score_list = []
     for entity in entity_list:
@@ -187,18 +198,13 @@ def select_high_score_entities(alpha, entity_list, num_sentences):
         score_list.append((entity, score))
 
     score_list = sorted(score_list, key=lambda x:x[1], reverse = True)
-    for i in range(10):
-        print(score_list[i][0])
-        print(score_list[i][1])
-        print('.........')
-    return [x[0] for x in score_list[:5] if x[1] > 0.07]  # threshold: 0.07
+    return [x[0] for x in score_list[:4] if x[1] > 0.07]  # threshold: 0.07
 
 
 def get_headline_entities(headline, merged_entities):
     '''
     Extracts the entities from the headline and updates merged_entities accordingly.
     '''
-    # print("HEADLINE ENTITIES:")  # TODO remove after testing
     locations_found = {}
     tokens = word_tokenize(headline)
     for entity in merged_entities:
@@ -213,19 +219,19 @@ def get_headline_entities(headline, merged_entities):
                     else:
                         for j in range(i[0], i[1]+1):
                             tokens[j] = ''
-                # print(name, '- Count:', count, '- Locations:', index_list)  # TODO remove after testing
                 entity.count += count
                 entity.headline = True
                 if entity.headline_locations:
                     entity.headline_locations += index_list
                 else:
                     entity.headline_locations = index_list
-    # print('---------------')  # TODO remove after testing
 
 
 def get_top_entities(headline, tokenized_article):
-    # url = input("Enter a website to extract the URL's from: ")
-    # print('Headline: ', headline)
+    '''
+    Returns the top entities (as entity objects) from the given headline (string)
+    and the tokenized article.
+    '''
     temp_entities, num_sentences = extract_entities_article(tokenized_article)
     merged_entities_ = merge_entities(temp_entities)
 
@@ -236,22 +242,5 @@ def get_top_entities(headline, tokenized_article):
             merged_entities.append(entity)
 
     get_headline_entities(headline, merged_entities)
-
-    '''
-    print('Merged Entities:')
-    for e in merged_entities:
-        print(e)
-    print('------------------------')
-    '''
-
     top_entities = select_high_score_entities(0.01, merged_entities, num_sentences)
-    print(top_entities)
-    print('*****************')
-    # headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
-    # top_entities = highest_score_entities + headline_entities
-    '''
-    print("Top Entities")
-    for e in top_entities:
-        print(e)
-    '''
     return top_entities
