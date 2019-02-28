@@ -1,10 +1,9 @@
 from nltk import pos_tag, sent_tokenize, word_tokenize
 from nltk.corpus import wordnet as wn
 from entity_recognition import get_top_entities
-from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 from stop_words import STOP_WORDS
 from functools import lru_cache
-# from similarity_dictionary import SIM_DIC
+from similarity_dictionary_filtered import SIM_DIC
 import re
 
 # pip install -U spacy
@@ -13,22 +12,13 @@ import spacy
 
 # pip3 install textblob
 from textblob import TextBlob
-# pip3 install news-please
 # pip3 install newspaper3k
-# from newsplease import NewsPlease
 from newspaper import Article
-# pip install beautifulsoup4
-# pip install lxml
-# pip install html5lib
-# from bs4 import BeautifulSoup
 
 
-''' UNCOMMENT CHUNK BELOW TO USE FILTERED DICTIONARIES '''
-from similarity_dictionary_filtered import SIM_DIC
 HERO_DICT = {'gentle', 'preserving', 'leadership', 'amazing', 'devoted', 'humble', 'warned', 'surprised', 'humanity', 'brave', 'evacuate', 'redemption', 'smile', 'honor', 'revolutionize', 'leader', 'advocate', 'savior', 'charity', 'sympathies', 'kindness', 'good', 'protect', 'teach', 'reputation', 'respected', 'welfare', 'glory', 'victory', 'winner', 'well', 'contained', 'restoration', 'commitment', 'ability', 'efforts', 'inspire', 'safety', 'allies', 'health', 'strength', 'empowered', 'passion', 'encouraging', 'warm', 'vision', 'scored', 'authorities', 'justice', 'grand', 'admire', 'reshape', 'communities', 'response', 'strengthen', 'bolster', 'intervened', 'motivated', 'reconstruct', 'freedom', 'duty', 'aided', 'conquer', 'smart', 'bravery', 'improve', 'donate', 'wise', 'ingenuity', 'milestone', 'protections', 'expand', 'hero', 'pursuit', 'invent', 'containment', 'achievement', 'supporters'}
 VILLAIN_DICT = {'contaminate', 'dirty', 'abduct', 'terror', 'worsen', 'crisis', 'lambast', 'abandonment', 'harass', 'subvert', 'virus', 'crime', 'provoke', 'kidnap', 'manipulate', 'alleged', 'refusal', 'trafficking', 'marginalize', 'conformity', 'clampdown', 'villain', 'disparaged', 'cold', 'exacerbate', 'alienate', 'commit', 'trial', 'violence', 'denounced', 'stripped', 'undermine', 'seize', 'persecuted', 'opposing', 'intimidate', 'jailed', 'fool', 'investigation', 'imprisoned', 'bias', 'deception', 'gunshots', 'threaten', 'hoax', 'engulfed', 'blame', 'eruption', 'offensive', 'contempt', 'suggested', 'coercion', 'erase', 'catastrophe', 'rumors', 'weaken', 'pointed', 'treason', 'evil', 'abused', 'sentenced', 'bullet', 'warn', 'devastate', 'convicted', 'rebuke', 'reveal', 'bully', 'collude'}
 VICTIM_DICT = {'setback', 'injured', 'traumatized', 'prevented', 'healing', 'buried', 'stuck', 'anguished', 'flee', 'suffer', 'casualty', 'trampled', 'forsaken', 'harassed', 'harassment', 'hardship', 'deported', 'howling', 'shocked', 'violence', 'depressed', 'danger', 'mute', 'stripped', 'terrified', 'distrust', 'assassinated', 'shivering', 'sick', 'complain', 'abducted', 'huddled', 'victimized', 'persecuted', 'barricaded', 'devastated', 'kidnapped', 'seized', 'justified', 'evacuated', 'surrendered', 'diagnosed', 'imprisoned', 'independence', 'slave', 'deceased', 'rebuffed', 'target', 'trapped', 'screamed', 'loss', 'trafficked', 'humiliated', 'impairment', 'wounded', 'discriminated', 'disadvantaged', 'blood', 'offended', 'accuses', 'saddens', 'threatened', 'disaster', 'devastation', 'overshadowed', 'tortured', 'abused', 'remonstrated', 'jeopardizing', 'stabbed', 'prey', 'sentenced', 'challenged', 'renounced', 'scared', 'humiliation', 'deaths', 'rescued', 'bleeding'}
-
 
 # Parts of speech that are invalid in WordNet similarity function
 IGNORE_POS = [
@@ -58,64 +48,16 @@ VICTIM = 2
 
 nlp = spacy.load('en')
 
-
-def role_to_string(role):
-    '''
-    Converts a given role to a string.
-    '''
-    if role == HERO:
-        return "hero"
-    elif role == VILLAIN:
-        return "villain"
-    elif role == VICTIM:
-        return "victim"
-    else:
-        return None
-
-
-def get_wn_pos(nltk_pos):
-    '''
-    Converts the given nltk part of speech to a word net part of speech.
-    '''
-    if nltk_pos in ["NN", "NNS", "NNP", "NNPS"]:
-        return wn.NOUN
-    elif nltk_pos in ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ", "MD"]:
-        return wn.VERB
-    elif nltk_pos in ["JJ", "JJR", "JJS"]:
-        return wn.ADJ
-    elif nltk_pos in ["RB", "RBR", "RBS", "WRB"]:
-        return wn.ADV
-    else:
-        return None
-
-
-# TODO Do we need to make words lowercase at any point in analysis???
-
 def extract_by_newspaper(url):
+    '''
+    News article extraction using newspaper
+    '''
     content = Article(url)
     content.download()
     content.parse()
     headline = content.title
     article = content.text
     return headline, article
-
-
-# def extract_by_newsplease(url):
-#    content = NewsPlease.from_url(url)
-#    headline = content.title
-#    article = content.text
-#    return headline, article
-
-
-# def extract_by_soup(url):
-#    content = BeautifulSoup(url, "lxml")
-#    headline = content.title.string
-#    articleList = list()
-#    for i in content.find_all("p"):
-#        articleList.append(i.get_text())
-#        print(i.get_text())
-
-#    return headline, articleList  # TODO modify output so article is string
 
 @lru_cache(maxsize=1000000)
 def word_similarity(word1, word2):
@@ -213,29 +155,10 @@ def similarity_to_role(word, role):
 
         score = similarity_total / (dict_length - count_zero)  # Do we want to shift this to 0,1 interval??
 
-    #full dictionary 10k
-    # if role == HERO:
-    #     avg = 0.3398
-    #     std = 0.1271
-    # elif role == VILLAIN:
-    #     avg = 0.3239
-    #     std = 0.1259
-    # else:
-    #     avg = 0.3180
-    #     std = 0.1238
-
-    # full dictionary 100k
-    # if role == HERO:
-    #     avg = 0.2228
-    #     std = 0.1782
-    # elif role == VILLAIN:
-    #     avg = 0.2128
-    #     std = 0.1722
-    # else:
-    #     avg = 0.2099
-    #     std = 0.1699
-
-    # filtered dictionary 10k
+    '''
+    Average and standard deviation calculated from comparing filtered dictionary 
+    to the 10k words collection
+    '''
     if role == HERO:
         avg = 0.3230
         std = 0.1239
@@ -245,19 +168,6 @@ def similarity_to_role(word, role):
     else:
         avg = 0.2901
         std = 0.1194
-
-    # filtered dictionary 100k
-    # if role == HERO:
-    #     avg = 0.2099
-    #     std = 0.1689
-    # elif role == VILLAIN:
-    #     avg = 0.1876
-    #     std = 0.1556
-    # else:
-    #     avg = 0.1915
-    #     std = 0.1581
-
-    #return score
 
     return (score - avg) / std
 
@@ -279,48 +189,6 @@ def skip_word(word, pos):
             return True
 
     return False
-
-
-def role_score_by_sentence(entity, role, index, tokenized_article):
-    '''
-    Calculates the role score of the entity in the given sentence.
-    '''
-    entity_location = entity.locations[index]  # A list where the elements are the beginning and ending indices
-    total_score = 0
-    # article from a string to a list of sentences
-    sentence = word_tokenize(tokenized_article[index])
-    tagged_sentence = pos_tag(sentence)
-    begin_index = entity_location[0]
-    end_index = entity_location[1] if len(entity_location) > 1 else entity_location[0]
-    # TODO I think if an entity appears twice in a sentence then we need to do something different with locations
-    for i in range(len(sentence)):
-        cur_score = 0
-        if not begin_index <= i <= end_index:
-            word = sentence[i]
-            pos = tagged_sentence[i][1]
-            if not skip_word(word, pos):
-                term_role = choose_role(word)
-                if role in term_role:
-                    cur_score += similarity_to_role(word, role)
-                    cur_score += additional_score(entity, role, word)
-                    cur_score *= decay_function(0.2, entity_location, i)  # TODO update f value
-        total_score += cur_score
-    return total_score
-
-
-def entity_role_score(entity, role, article):
-    '''
-    Calculates the role score of the entity by averaging the
-    role scores of the sentences where the entity appears.
-    '''
-    total_score = 0
-    count = 0
-    for index in entity.locations:
-        total_score += role_score_by_sentence(entity, role, index, article)
-        count += 1
-    print(role_to_string(role) + ": " + str(total_score/count))
-    return total_score / count
-
 
 def active_passive_role(entity_string, aSentence):
     '''
@@ -347,31 +215,6 @@ def active_passive_role(entity_string, aSentence):
             else:
                 return "neutral"
     return "notInSentence"
-
-
-def main(url):
-    '''
-    Retrieve the three top entities from entity_recognition.py;
-    assign each entity the role with the highest role score.
-    '''
-    headline, article = extract_by_newspaper(url)
-    tokenized_article = sent_tokenize(article)
-    entities = get_top_entities(headline, tokenized_article)
-    for entity in entities:
-        # TODO calculate headline score ??
-        role = HERO
-        score = entity_role_score(entity, HERO, tokenized_article)
-        cur = entity_role_score(entity, VILLAIN, tokenized_article)
-        if cur > score:
-            score = cur
-            role = VILLAIN
-        if entity_role_score(entity, VICTIM, tokenized_article) > score:
-            role = VICTIM
-        entity.role = role_to_string(role)
-        print(entity)
-        print(entity.role)
-        # TODO assign threshold ???
-    return entities
 
 
 def is_word_part_of_entity(entities_in_sent, sentence_index, word_index):
@@ -408,7 +251,7 @@ def additional_score(act_pas, role, score):
     return 0
 
 
-def main2(url, add_score, decay_factor):
+def main(url, add_score, decay_factor):
     try:
         headline, article = extract_by_newspaper(url)
     except:
@@ -419,88 +262,6 @@ def main2(url, add_score, decay_factor):
     try:
         tokenized_article = sent_tokenize(article)
         entities = get_top_entities(headline, tokenized_article)
-
-        # Initialize scores, counts, top words (indexed by entities) for headline
-        hero_scores, villain_scores, victim_scores = [], [], []
-        top_hero_words, top_villain_words, top_victim_words = [], [], []
-        counts = []
-        for i in range(len(entities)):
-            hero_scores.append(0)
-            villain_scores.append(0)
-            victim_scores.append(0)
-            top_hero_words.append({})
-            top_villain_words.append({})
-            top_victim_words.append({})
-            counts.append(0)
-
-        # Process headline
-    #    entities_in_headline = []
-    #    for i, entity in enumerate(entities):
-    #        if entity.headline:
-    #            counts[i] += 1
-    #            entities_in_headline.append(entity)
-    #
-    #    if entities_in_headline:
-    #        headline_tokens = word_tokenize(headline)
-    #        for i, word in enumerate(headline_tokens):
-    #            if skip_word(word, None) or is_word_part_of_entity(entities_in_headline, "H", i):
-    #                continue
-    #
-    #            term_role = choose_role(word)
-    #            scores = {}
-    #            for role in term_role:
-    #                scores[role] = similarity_to_role(word, role)
-    #            for entity in entities_in_headline:
-    #                entity_index = entities.index(entity)
-    #                for role in term_role:
-    #                    cur_score = scores[role]
-    #                    # cur_score += additional_score(entity, role, word)
-    #                    cur_score *= decay_function(0.5, entity.headline_locations, i)  # TODO update f value
-    #                    if role == HERO:
-    #                        hero_scores[entity_index] += cur_score
-    #                        if word in top_hero_words[entity_index]:
-    #                            top_hero_words[entity_index][word] += cur_score
-    #                        else:
-    #                            top_hero_words[entity_index][word] = cur_score
-    #
-    #                    elif role == VILLAIN:
-    #                        villain_scores[entity_index] += cur_score
-    #                        if word in top_villain_words[entity_index]:
-    #                            top_villain_words[entity_index][word] += cur_score
-    #                        else:
-    #                            top_villain_words[entity_index][word] = cur_score
-    #
-    #                    elif role == VICTIM:
-    #                        victim_scores[entity_index] += cur_score
-    #                        if word in top_victim_words[entity_index]:
-    #                            top_victim_words[entity_index][word] += cur_score
-    #                        else:
-    #                            top_victim_words[entity_index][word] = cur_score
-
-        # Compute total headline scores
-        # TODO incorporate this headline code into actual assignment
-        # print("HEADLINE:")
-        # for i, entity in enumerate(entities):
-        #     if counts[i] != 0:
-        #         hero_score = hero_scores[i] / counts[i]
-        #         villain_score = villain_scores[i] / counts[i]
-        #         victim_score = victim_scores[i] / counts[i]
-        #     else:
-        #         hero_score, villain_score, victim_score = 0, 0, 0
-        #
-        #     print(entity)
-        #     print("HERO:", hero_score)
-        #     print("HERO TOP WORDS:", get_top_words(top_hero_words[i]))
-        #     print("VILLAIN:", villain_score)
-        #     print("VILLAIN TOP WORDS:", get_top_words(top_villain_words[i]))
-        #     print("VICTIM:", victim_score)
-        #     print("VICTIM TOP WORDS:", get_top_words(top_victim_words[i]))
-        #
-        #     # entity.role = role_to_string(role)
-        #     # print(entity)
-        #     # print(entity.role)
-        #
-        #     print("------------------------")
 
         # Initialize scores, counts, top words (indexed by entities)
         hero_scores, villain_scores, victim_scores = [], [], []
@@ -598,7 +359,7 @@ def main2(url, add_score, decay_factor):
                 villain_score = villain_scores[i] / counts[i]
                 victim_score = victim_scores[i] / counts[i]
 
-            # algorithm to determine entity roles
+            # Determine entity roles based on role scores of entities
             sorted_scores = sorted([hero_score, villain_score, victim_score], reverse = True)
             max_score = sorted_scores[0]
             second_score = sorted_scores[1]
@@ -620,9 +381,6 @@ def main2(url, add_score, decay_factor):
                 else:
                     top_words[VICTIM] = [x[0] for x in get_top_words(top_victim_words[i])]
 
-            print(entities_names_scores)
-            print(top_words)
-
             print(entity)
             print("HERO:", hero_score)
             print("HERO TOP WORDS:", get_top_words(top_hero_words[i]))
@@ -631,10 +389,6 @@ def main2(url, add_score, decay_factor):
             print("VICTIM:", victim_score)
             print("VICTIM TOP WORDS:", get_top_words(top_victim_words[i]))
 
-            # entity.role = role_to_string(role)
-            # print(entity)
-            # print(entity.role)
-
             print("------------------------")
 
         return entities_names_scores, top_words
@@ -642,22 +396,8 @@ def main2(url, add_score, decay_factor):
     except:
         return 1, 1
 
-
-def identifyHeroVillianVictimONErole(entity, hero_score, villian_score, victim_score):
-    maxScore = max(hero_score, villian_score, victim_score)
-    if maxScore == hero_score:
-        role = "Hero"
-    if maxScore == villian_score:
-        role = "Villian"
-    if maxScore == victim_score:
-        role = "Victim"
-    return role
-
-#create a data structure that has dic entity name, role,  top words,
-
-
 if __name__ == "__main__":
-    main2(
+    main(
         "https://abcnews.go.com/Politics/house-vote-terminating-trumps-national-emergency-declaration-border/story?id=61298647&cid=clicksource_4380645_1_heads_hero_live_hero_hed",
           0.2, 0.1,  # additional score, decay factor
           )

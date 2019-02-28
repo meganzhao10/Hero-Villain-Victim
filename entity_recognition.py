@@ -3,7 +3,6 @@ Potential concerns and possible features to implement in the future
 -Exclude the location tag at the beginning of the article
 -Dealing with positions (the witness...)
 '''
-# TODO remove all print statements once done testing
 
 import codecs
 from nltk import ne_chunk, pos_tag, word_tokenize
@@ -222,12 +221,9 @@ def get_headline_entities(headline, merged_entities):
                     entity.headline_locations += index_list
                 else:
                     entity.headline_locations = index_list
-    # print('---------------')  # TODO remove after testing
 
 
 def get_top_entities(headline, tokenized_article):
-    # url = input("Enter a website to extract the URL's from: ")
-    # print('Headline: ', headline)
     temp_entities, num_sentences = extract_entities_article(tokenized_article)
     merged_entities_ = merge_entities(temp_entities)
 
@@ -239,19 +235,8 @@ def get_top_entities(headline, tokenized_article):
 
     get_headline_entities(headline, merged_entities)
 
-    '''
-    print('Merged Entities:')
-    for e in merged_entities:
-        print(e)
-    print('------------------------')
-    '''
-
     highest_score_entities = select_high_score_entities(0.5, merged_entities, num_sentences)
     headline_entities = [e for e in merged_entities if e.headline and e not in highest_score_entities]
     top_entities = highest_score_entities + headline_entities
-    '''
-    print("Top Entities")
-    for e in top_entities:
-        print(e)
-    '''
+
     return top_entities
