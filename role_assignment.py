@@ -1,20 +1,22 @@
-from nltk import pos_tag, sent_tokenize, word_tokenize
-from nltk.corpus import wordnet as wn
-from entity_recognition import get_top_entities
-from stop_words import STOP_WORDS
+'''
+Assigns entities in a news article to roles of hero, villain, or victim.
+'''
+
+
 from functools import lru_cache
-from similarity_dictionary import SIM_DIC
-from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
 import re
 
-# pip install -U spacy
-# python3 -m spacy download xx
 import spacy
-
-# pip3 install textblob
-from textblob import TextBlob
-# pip3 install newspaper3k
 from newspaper import Article
+from nltk import pos_tag, sent_tokenize, word_tokenize
+from nltk.corpus import wordnet as wn
+from textblob import TextBlob
+
+from entity_recognition import get_top_entities
+from role_dictionaries import HERO_DICT, VILLAIN_DICT, VICTIM_DICT
+from stop_words import STOP_WORDS
+from similarity_dictionary import SIM_DIC
+
 
 # Parts of speech that are invalid in WordNet similarity function
 IGNORE_POS = [
@@ -48,7 +50,7 @@ nlp = spacy.load('en')
 
 def extract_by_newspaper(url):
     '''
-    News article extraction using newspaper
+    News article extraction from url using newspaper package.
     '''
     content = Article(url)
     content.download()
@@ -63,7 +65,6 @@ def word_similarity(word1, word2):
     '''
     Returns the Wu-Palmer similarity between the given words.
     Values range between 0 (least similar) and 1 (most similar).
-    Optional part of speech argument for word1 limits WordNet synsets.
     '''
     syns_w1 = wn.synsets(word1)
     syns_w2 = wn.synsets(word2)
@@ -100,10 +101,11 @@ def sentiment(word):
     return word_blob.sentiment.polarity
 
 
-def choose_role(word):
+def choose_roles(word):
     '''
-    Uses the sentiment score of a term to determine which dictionary is likely
-    to be most useful.
+    Uses the sentiment score of a term to determine which dictionaries are
+    likely to be most useful. Negative sentiment maps to villain and victim
+    dics, positive to hero, and neutral to all three.
     '''
     s = sentiment(word)
     if s > 0.15:
@@ -117,8 +119,7 @@ def choose_role(word):
 @lru_cache(maxsize=1000000)
 def similarity_to_role(word, role):
     '''
-    Returns the similarity of the word to the role. Optional part of speech
-    argument to be passed along to WordNet.
+    Returns the similarity of the word to the role.
     '''
     # Check for preprocessed scores
     scores = SIM_DIC.get(word)
@@ -191,15 +192,15 @@ def skip_word(word, pos):
     return False
 
 
-def active_passive_role(entity_string, aSentence):
+def active_passive_role(entity_string, sentence):
     '''
     Determine whether the entity is an active or passive role.
     Active roles = subject or passive object
     Passive roles = object or passive subject
     '''
-    aSent = nlp(aSentence)
+    sent = nlp(sentence)
     isActive = False
-    for tok in aSent:
+    for tok in sent:
         if (tok.dep_ == "nsubj"):
             isActive = True
         if (str(tok) == entity_string):
@@ -326,7 +327,7 @@ def main(url, add_score, decay_factor):
                     continue
 
                 # Update scores for corresponding roles
-                term_role = choose_role(word)
+                term_role = choose_roles(word)
                 scores = {}
                 for role in term_role:
                     scores[role] = similarity_to_role(word, role)

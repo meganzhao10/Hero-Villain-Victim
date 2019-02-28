@@ -100,8 +100,8 @@ def extract_entities_article(tokenized_article):
     '''
     named_entities = []
     num_sentences = len(tokenized_article)
-    for i in range(num_sentences):
-        sentence = tokenized_article[i]
+    for sentence_number in range(num_sentences):
+        sentence = tokenized_article[sentence_number]
         tokens = word_tokenize(sentence)
         tagged_sentence = pos_tag(tokens)
         chunked_entities = ne_chunk(tagged_sentence)
@@ -110,10 +110,10 @@ def extract_entities_article(tokenized_article):
         for tree in chunked_entities:
             if hasattr(tree, 'label') and tree.label() in RECOGNIZED_TYPES:
                 entity_name = ' '.join(c[0] for c in tree.leaves())
-                sentence_number = i
                 index_list = get_locations(entity_name, tokens, locations_found)
                 entity = (entity_name, sentence_number, index_list)
                 named_entities.append(entity)
+
     return (named_entities, num_sentences)
 
 
@@ -136,6 +136,7 @@ def merge_entities(temp_entities):
             # Get entities of which name is substring
             if normalized_name in entity.normalized_name:
                 matches.append(entity)
+
         # If name matches one existing entity, merge it
         if len(matches) == 1:
             entity = matches[0]
@@ -151,6 +152,7 @@ def merge_entities(temp_entities):
         else:
             entity = Entity(name, normalized_name, sentence_number=sentence_number, index_list=index_list)
             merged_entities.append(entity)
+
     return merged_entities
 
 
@@ -165,13 +167,15 @@ def normalize_name(name):
             break
     no_prefix = name[i:]
     normalized = ' '.join(no_prefix)
-    # when input text is unicode encoded in utf-8
+
+    # When input text is unicode encoded in utf-8
     try:
         s = codecs.decode("’s", 'utf-8')
     except:
         s = "’s"
     if normalized.endswith("'s") or normalized.endswith(s):
         normalized = normalized[:-2]
+
     return normalized
 
 
@@ -212,7 +216,7 @@ def get_headline_entities(headline, merged_entities):
             index_list = get_locations(name, tokens, locations_found)
             if index_list:
                 count = len(index_list)
-                # replace to avoid double counting but maintain indeces
+                # Replace to avoid double counting but maintain indeces
                 for i in index_list:
                     if isinstance(i, int):
                         tokens[i] = ''
