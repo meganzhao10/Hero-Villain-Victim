@@ -13,12 +13,12 @@ run = function(tabs) {
     $(document).ready(function() {
         $.get(localhost, {"url": url}, function(data){
             if (data == "Extraction error") {
-                document.getElementById("error").innerHTML = "Try another news site?";
+                document.getElementById("error").innerHTML = "Article extraction error.<br/>Try another news site?";
                 $('div').hide();
                 $('#error').show();
                 $('div#titleDiv').show();
             } else if (data == "Entity recognition/role assignment errors") {
-                document.getElementById("error").innerHTML = "Entity recognition/role assignment errors";
+                document.getElementById("error").innerHTML = "Error with entity recognition or role<br/>assignment. Try another article?";
                 $('div').hide();
                 $('#error').show();
                 $('div#titleDiv').show();
@@ -29,7 +29,7 @@ run = function(tabs) {
                     document.getElementById("villainDiv").querySelectorAll("#villain")[0].innerHTML = data[0][1];
                     document.getElementById("victimDiv").querySelectorAll("#victim")[0].innerHTML = data[0][2];
 
-
+                    // Set top words for assigned roles
                     if (data[1][0] != null) {
                         document.getElementById("heroDiv").querySelectorAll(".word1")[0].innerHTML = data[1][0][0];
                         document.getElementById("heroDiv").querySelectorAll(".word2")[0].innerHTML = data[1][0][1];
@@ -45,15 +45,16 @@ run = function(tabs) {
                     if (data[1][2] != null){
                         document.getElementById("victimDiv").querySelectorAll(".word1")[0].innerHTML = data[1][2][0];
                         document.getElementById("victimDiv").querySelectorAll(".word2")[0].innerHTML = data[1][2][1];
-                        document.getElementById("victimDiv").querySelectorAll(".word3")[0].innerHTML = data[1][2][2]; 
+                        document.getElementById("victimDiv").querySelectorAll(".word3")[0].innerHTML = data[1][2][2];
                     }
 
                     // Show everything except loading message
                     $('div').hide();
                     $('div:not(#loading)').show();
                     $('#error').hide();
-                    
 
+
+                    // Hide top words if no entity assigned
                     if (data[1][0] == null) {
                         $('#heroWords').hide();
                     }
@@ -67,14 +68,13 @@ run = function(tabs) {
                     $('div').hide();
                     $('#error').show();
                     $('div#titleDiv').show();
-                }                
+                }
             }
-
-
         });
     });
 };
 
+// Run function when extensioin active
 chrome.tabs.query({
     active: true,
     currentWindow: true
