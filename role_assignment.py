@@ -375,12 +375,10 @@ def get_roles_and_top_words():
             villain_score = villain_scores[i] / counts[i]
             victim_score = victim_scores[i] / counts[i]
 
-        # TODO delete this printing
-        print(entity)
-        print("HERO:", hero_score)
-        print("VILLAIN:", villain_score)
-        print("VICTIM:", victim_score)
-        print("------------------------")
+        # Add relevance to scores
+        hero_score += 5*entity.relevance_score
+        villain_score += 5*entity.relevance_score
+        victim_score += 5*entity.relevance_score
 
         # Determine entity role based on max role score
         sorted_scores = sorted([hero_score, villain_score, victim_score], reverse=True)
@@ -463,11 +461,3 @@ def assign_roles(url, add_score, decay_factor):
 
     # Finalize assignment and top words
     return get_roles_and_top_words()
-
-
-# TODO delete this from final version
-if __name__ == "__main__":
-    assign_roles(
-        "https://www.washingtonpost.com/local/legal-issues/paul-manafort-a-hardened-and-bold-criminal-mueller-prosecutors-tell-judge/2019/02/23/690bd33c-3542-11e9-af5b-b51b7ff322e9_story.html",
-          0.2, 0.1,  # additional score, decay factor
-          )

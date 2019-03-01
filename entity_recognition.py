@@ -40,6 +40,7 @@ class Entity:
     headline = False
     name_forms = []
     role = None
+    relevance_score = 0
 
     def __init__(self, name, normalized_name, sentence_number=None,
                  index_list=None, headline=False, headline_index_list=None,
@@ -63,9 +64,11 @@ class Entity:
         String representation of the entity.
         '''
         return ('(Name: {name}, Count: {count}, Headline: {headline}, '
-                'Headline Locations: {headline_locs}, Text Locations: {locations})'
+                'Headline Locations: {headline_locs}, Text Locations: {locations}), '
+                'Relevance Score: {relevance}'
                 .format(name=self.name, count=self.count, headline=self.headline,
                         locations=self.locations, headline_locs=self.headline_locations,
+                        relevance=round(self.relevance_score, 3),
                         )
                 )
 
@@ -193,16 +196,17 @@ def relevance_score(alpha, entity, num_sentences):
 
 def select_high_score_entities(alpha, entity_list, num_sentences):
     '''
-    Returns a list of the 4 entities with highest relevance score
+    Returns a list of the 3 entities with highest relevance score
     above a threshold of 0.07 (chosen after testing many articles).
     '''
     score_list = []
     for entity in entity_list:
         score = relevance_score(alpha, entity, num_sentences)
         score_list.append((entity, score))
+        entity.relevance_score = score
 
-    score_list = sorted(score_list, key=lambda x:x[1], reverse = True)
-    return [x[0] for x in score_list[:4] if x[1] > 0.07]  # threshold: 0.07
+    score_list = sorted(score_list, key=lambda x: x[1], reverse=True)
+    return [x[0] for x in score_list[:3] if x[1] > 0.07]  # threshold: 0.07
 
 
 def get_headline_entities(headline, merged_entities):
