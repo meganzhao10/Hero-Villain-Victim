@@ -410,7 +410,7 @@ def get_roles_and_top_words():
 
 
 def assign_roles(url, add_score, decay_factor):
-    # Extract article from url, tokenize, extract entities
+    # Extract article from url and tokenize
     try:
         headline, article = extract_by_newspaper(url)
     except:
@@ -418,9 +418,13 @@ def assign_roles(url, add_score, decay_factor):
     if len(article) == 0:
         raise NewspaperError
     tokenized_article = sent_tokenize(article)
-    entities = get_top_entities(headline, tokenized_article)
 
-    # Initialize globals
+    # Remove headline from article if it's added to first sentence (common extraction error)
+    if (headline in tokenized_article[0]):
+        tokenized_article[0] = tokenized_article[0].replace(headline, "")
+
+    # Get top entities and initialize globals
+    entities = get_top_entities(headline, tokenized_article)
     initialize_globals(entities, add_score, decay_factor)
 
     # Loop through each sentence
