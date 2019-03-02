@@ -301,7 +301,9 @@ def initialize_globals(entities, additional_score, decay_factor):
     decay = decay_factor
     n = len(entities)
     hero_scores, villain_scores, victim_scores, counts = ([0]*n for i in range(4))
-    top_hero_words, top_villain_words, top_victim_words = ([{}]*n for i in range(3))
+    top_hero_words = [{} for _ in range(n)]
+    top_villain_words = [{} for _ in range(n)]
+    top_victim_words = [{} for _ in range(n)]
 
 
 def get_entities_in_sent(sentence_index):
