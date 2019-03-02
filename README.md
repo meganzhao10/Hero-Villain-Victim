@@ -45,5 +45,6 @@ Click the LOAD UNPACKED button and select the extension directory.
 ## Acknowledgments
 
 * Inspired by the paper: Who is the Hero, the Villain, and the Victim?: Detection of Roles in News Articles using Natural Language Techniques (https://dl.acm.org/citation.cfm?id=3172993)
+* Basis of merging algorithm comes from the NU Infolab News Context Project
 * Advised by David Musicant
 
