@@ -204,16 +204,16 @@ def active_passive_role(entity_string, sentence):
     Passive roles = object or passive subject
     '''
     sent = nlp(sentence)
-    isActive = False
+    is_active = False
     for tok in sent:
         if (tok.dep_ == "nsubj"):
-            isActive = True
+            is_active = True
         if (str(tok) == entity_string):
             if (tok.dep_ == "nsubj"):
                 return "active"
-            if (tok.dep_ == "pobj" and not isActive):
+            if (tok.dep_ == "pobj" and not is_active):
                 return "active"
-            if (tok.dep_ == "pobj" and isActive):
+            if (tok.dep_ == "pobj" and is_active):
                 return "passive"
             elif (tok.dep_ == "dobj" or tok.dep_ == "nsubjpass"):
                 return "passive"
