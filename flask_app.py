@@ -18,7 +18,7 @@ def after_request(response):
 def role_assignment():
     url = request.args.get("url")
     try:
-        role_names, top_words = assign_roles(url, 0.2, 0.1)
+        role_names, top_words = assign_roles(url, 2.0, 0.25)
         top_entity_names = []
         for name in role_names:
             name_string = name if name else "None"
