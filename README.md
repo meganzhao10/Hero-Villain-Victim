@@ -27,6 +27,11 @@ Open the Extension Management page by navigating to chrome://extensions.
 
 Click the LOAD UNPACKED button and select the extension directory.
 
+### To Run
+```
+python3 flask_app.py 
+```
+Open the a news website on Google Chrome and click the extension icon next to right of the address bar.
 
 ## Built With
 * [Newspaper](https://github.com/codelucas/newspaper) - scrape articles from news sites
