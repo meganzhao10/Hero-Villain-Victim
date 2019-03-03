@@ -19,8 +19,12 @@ pip3 install textblob
 ```
 Spacy
 ```
-pip install -U spacy
+pip3 install -U spacy
 python3 -m spacy download xx
+```
+Flask
+```
+pip3 install flask
 ```
 ### Installing
 Open the Extension Management page by navigating to chrome://extensions.
