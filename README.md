@@ -4,25 +4,28 @@ A Google Chrome extension to detect roles of hero, villain, and victim in news a
 ## Getting Started
 
 ### Prerequisites
-Newspaper 
+#### Newspaper 
 ```
 pip3 install newspaper3k
 ```
-NLTK
+#### NLTK
+
+Mac/Unix
 ```
 pip3 install -U nltk
 ```
+Windows: http://pypi.python.org/pypi/nltk
 
-TextBlob
+#### TextBlob
 ```
 pip3 install textblob
 ```
-Spacy
+#### Spacy
 ```
 pip3 install -U spacy
 python3 -m spacy download xx
 ```
-Flask
+#### Flask
 ```
 pip3 install flask
 ```
