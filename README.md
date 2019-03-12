@@ -10,7 +10,7 @@ pip3 install newspaper3k
 ```
 NLTK
 ```
-###
+pip3 install -U nltk
 ```
 
 TextBlob
