@@ -3,7 +3,7 @@ A Google Chrome extension to detect roles of hero, villain, and victim in news a
 
 ## Getting Started
 
-### Prerequisites
+### Requirements
 #### Newspaper
 ```
 pip3 install newspaper3k
@@ -31,7 +31,7 @@ python3 -m spacy download xx
 ```
 pip3 install flask
 ```
-### Installing
+### Loading Extension
 Open the Extension Management page by navigating to chrome://extensions.
 
 Click the LOAD UNPACKED button and select the extension directory.
