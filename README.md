@@ -49,9 +49,8 @@ Open the a news website on Google Chrome and click the extension icon next to ri
 * [Spacy](https://spacy.io/) - recognize active/passive sentences
 
 ## Demo
-
-![Alt text](img-demo/img1.png?raw=true "Title")
-![Alt text](img-demo/img2.png?raw=true "Title")
+<img src="img-demo/img1.png">
+<img src="img-demo/img2.png" width="60%">
 
 ## Authors:
 * **Tianna Avery** - [tiannaavery](https://github.com/tiannaavery)
