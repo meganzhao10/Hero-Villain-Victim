@@ -48,6 +48,10 @@ Open the a news website on Google Chrome and click the extension icon next to ri
 * [TextBlob](https://textblob.readthedocs.io/en/dev/) - analyze sentiment of words
 * [Spacy](https://spacy.io/) - recognize active/passive sentences
 
+## Demo
+
+![Alt text](img-demo/img1.png?raw=true "Title")
+![Alt text](img-demo/img2.png?raw=true "Title")
 
 ## Authors:
 * **Tianna Avery** - [tiannaavery](https://github.com/tiannaavery)
