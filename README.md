@@ -1,5 +1,5 @@
 # Hero-Villain-Victim
-A Google Chrome extension is created to detect roles of hero, villain, and victim in news articles using natural language techniques.
+Deliver a Google Chrome Extension that analyzes the entities (individuals, organizations, countries, etc.) contained within a news article and categorizes the most important entities as either being a hero, villain, or victim.
 
 ## Getting Started
 
@@ -10,7 +10,7 @@ pip3 install newspaper3k
 ```
 #### NLTK
 
-Mac/Unix
+Mac/Unix Enviornment:
 ```
 pip3 install nltk
 
@@ -47,8 +47,9 @@ Open the a news website on Google Chrome and click the extension icon next to ri
 * [NLTK](https://www.nltk.org/) - recognize entities and compute word similarity
 * [TextBlob](https://textblob.readthedocs.io/en/dev/) - analyze sentiment of words
 * [Spacy](https://spacy.io/) - recognize active/passive sentences
+* [Flask](http://flask.pocoo.org/) - host a local server to run code
 
-## Demo
+## User Interface Demo
 <img src="img-demo/img1.png">
 <img src="img-demo/img2.png" width="60%">
 
@@ -62,4 +63,5 @@ Open the a news website on Google Chrome and click the extension icon next to ri
 
 * Inspired by the paper: Who is the Hero, the Villain, and the Victim?: Detection of Roles in News Articles using Natural Language Techniques (https://dl.acm.org/citation.cfm?id=3172993)
 * Basis of merging algorithm comes from the NU Infolab News Context Project
-* Advised by David Musicant
+* Advised by Professor David Musicant of Carleton College
+* September 2018 - March 2019
